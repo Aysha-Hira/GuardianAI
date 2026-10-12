@@ -1,0 +1,15 @@
+node_modules/
+.env
+__pycache__/
+*.pt
+*.pth
+datasets/
+.DS_Store
+virtual_environment/
+*.pyc
+output_*.mp4
+checkpoint.json
+*.zip
+ai/behaviour/datasets/
+ai\videos
+crowd_human/
