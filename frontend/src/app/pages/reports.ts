@@ -43,7 +43,6 @@ const TOGGLES: { key: ToggleKey; label: string }[] = [
   { key: 'includeZoneBreakdown', label: 'Zone breakdown' },
 ]
 
-/** Port of React's pages/Reports. */
 @Component({
   selector: 'app-reports',
   imports: [

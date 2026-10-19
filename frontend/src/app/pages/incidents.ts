@@ -40,7 +40,6 @@ const EVENT_OPTIONS: [string, string][] = [
   ['behavior_anomaly', 'Behavior Anomaly'],
 ]
 
-/** Port of React's pages/Incidents. */
 @Component({
   selector: 'app-incidents',
   imports: [

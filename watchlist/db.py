@@ -1,5 +1,3 @@
-"""Watchlist table. Face photo + embedding are stored ENCRYPTED (Fernet, key from .env)."""
-
 from __future__ import annotations
 
 import os
@@ -10,7 +8,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from auth.database import Base, engine
 
-# Generate with:  python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 _KEY_ENV = "GUARDIAN_DATA_KEY"
 
 

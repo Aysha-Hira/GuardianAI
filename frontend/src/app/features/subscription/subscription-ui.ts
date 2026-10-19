@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import type { CardBrand, PaymentMethodId } from '../../shared/types/subscription'
 import { cardBrandLabel, formatAedDetailed } from '../../shared/utils/subscriptionMock'
 
-/** Port of CardBrandMark (renders nothing for 'unknown', like React). */
 @Component({
   selector: 'app-card-brand-mark',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,7 +37,6 @@ export class CardBrandMarkComponent {
   )
 }
 
-/** Port of CardBrandRow. */
 @Component({
   selector: 'app-card-brand-row',
   imports: [CardBrandMarkComponent],
@@ -59,7 +57,6 @@ export class CardBrandRowComponent {
   }
 }
 
-/** Port of SecureCheckoutStrip. */
 @Component({
   selector: 'app-secure-checkout-strip',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -94,7 +91,6 @@ export class SecureCheckoutStripComponent {
   readonly compact = input(false)
 }
 
-/** Port of PaymentProcessingOverlay (simulated payment animation). */
 @Component({
   selector: 'app-payment-processing-overlay',
   imports: [SecureCheckoutStripComponent, CardBrandMarkComponent],

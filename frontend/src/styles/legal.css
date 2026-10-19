@@ -1,4 +1,3 @@
-/* Terms & Privacy — a reading layout, separate from the two-column auth shell. */
 .legal-page {
   --legal-bg: var(--color-guardian-bg, #080a0f);
   --legal-rule: var(--color-guardian-border-subtle, #1e2433);
@@ -15,7 +14,6 @@
   font-family: var(--font-sans);
 }
 
-/* Top bar */
 .legal-bar {
   position: sticky;
   top: 0;
@@ -85,7 +83,6 @@
   }
 }
 
-/* Hero */
 .legal-hero {
   max-width: 72rem;
   margin: 0 auto;
@@ -113,7 +110,6 @@
   color: var(--legal-body);
 }
 
-/* Body: contents rail + document */
 .legal-layout {
   max-width: 72rem;
   margin: 0 auto;

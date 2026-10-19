@@ -18,7 +18,6 @@ export interface SubscriptionPlan {
 }
 
 export interface SubscriptionReceipt {
-  /** null for the Free plan (nothing was bought). */
   receiptNumber: string | null
   planId: SubscriptionPlanId
   planName: string
@@ -33,9 +32,7 @@ export interface SubscriptionReceipt {
   nextBillingDate: string | null
   nextBillingLabel: string
   status: 'active' | 'replaced' | 'cancelled'
-  /** Plan features (from the server). */
   recording?: boolean
-  /** Set when the receipt comes from the server (saved to the account). */
   priceAed?: number
   vatAed?: number
   cameraLimit?: number | null
@@ -44,7 +41,6 @@ export interface SubscriptionReceipt {
   endedAt?: string | null
 }
 
-/** Raw shape returned by /api/subscription (labels are formatted on the client). */
 export type ApiSubscription = Omit<SubscriptionReceipt, 'paidAtLabel' | 'nextBillingLabel'>
 
 export interface CheckoutPayload {

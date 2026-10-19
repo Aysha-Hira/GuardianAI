@@ -21,12 +21,10 @@ function loadDisplaySettings(): DisplaySettings {
     const raw = localStorage.getItem(DISPLAY_SETTINGS_KEY)
     if (raw) return JSON.parse(raw) as DisplaySettings
   } catch {
-    /* ignore */
   }
   return { showTrackTrails: false, showConfidenceScores: true, showCameraOverlay: true }
 }
 
-/** Port of React's pages/Settings. */
 @Component({
   selector: 'app-settings',
   imports: [ErrorStateComponent, PageHeaderComponent, RouterLink, ToggleComponent],
@@ -65,7 +63,6 @@ function loadDisplaySettings(): DisplaySettings {
           </nav>
 
           <div class="st-sections">
-            <!-- Account -->
             <section class="st-section" id="account" aria-labelledby="account-h">
               <div class="st-section-head">
                 <h2 class="st-section-title" id="account-h">Account</h2>
@@ -184,7 +181,6 @@ function loadDisplaySettings(): DisplaySettings {
               </div>
             </section>
 
-            <!-- Plan & billing -->
             <section class="st-section" id="plan" aria-labelledby="plan-h">
               <div class="st-section-head">
                 <h2 class="st-section-title" id="plan-h">Plan &amp; billing</h2>
@@ -257,7 +253,6 @@ function loadDisplaySettings(): DisplaySettings {
               }
             </section>
 
-            <!-- Detection -->
             <section class="st-section" id="detection" aria-labelledby="detection-h">
               <div class="st-section-head">
                 <h2 class="st-section-title" id="detection-h">Detection</h2>
@@ -288,7 +283,6 @@ function loadDisplaySettings(): DisplaySettings {
               </div>
             </section>
 
-            <!-- Display -->
             <section class="st-section" id="display" aria-labelledby="display-h">
               <div class="st-section-head">
                 <h2 class="st-section-title" id="display-h">Display</h2>
@@ -338,7 +332,6 @@ export class SettingsPage {
   protected readonly active = signal('account')
   protected readonly aed = (v: number) => formatAedDetailed(v)
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef)
-  /** After a rail click, keep that item highlighted while the page scrolls to it. */
   private lockActiveUntil = 0
 
   protected readonly initials = computed(() =>
@@ -350,7 +343,6 @@ export class SettingsPage {
       .join(''),
   )
 
-  /** Rail entries show each section's current state at a glance. */
   protected readonly sections = computed(() => {
     const plan = this.subs.current()
     const loiter = this.savedLoitering() ?? this.poll.data()?.loitering_threshold_seconds

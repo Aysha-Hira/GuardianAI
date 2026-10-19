@@ -19,7 +19,6 @@ import {
 } from '../shared/types/faceRecognition'
 import { PageHeaderComponent, StatCardComponent } from '../shared/ui/common'
 
-/** Port of React's components/face-recognition/FaceRecognitionPage (+ useFaceEnroll). */
 @Component({
   selector: 'app-face-recognition',
   imports: [
@@ -83,7 +82,6 @@ export class FaceRecognitionPage {
   readonly toast = signal<string | null>(null)
   readonly engine = signal<WatchlistEngineStatus | null>(null)
 
-  // useFaceEnroll state
   readonly scanState = signal<ScanState>('idle')
   readonly progress = signal(0)
   readonly statusLabel = signal('')
@@ -110,7 +108,6 @@ export class FaceRecognitionPage {
     void this.refreshWatchlist()
     void this.refreshEngine()
 
-    // React: useEffect([hasImage, scanState]) in useFaceEnroll.
     effect(() => {
       const hasImage = !!this.image()
       const state = this.scanState()
@@ -123,7 +120,6 @@ export class FaceRecognitionPage {
       }
     })
 
-    // React: toast auto-dismiss after 3.5s.
     effect((onCleanup) => {
       if (!this.toast()) return
       const id = window.setTimeout(() => this.toast.set(null), 3500)

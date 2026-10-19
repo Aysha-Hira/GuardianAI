@@ -5,7 +5,6 @@ import { AuthAlertComponent, AuthDemoBannerComponent } from '../../shared/ui/aut
 import { PasswordMatchComponent, PasswordRulesComponent } from '../../shared/ui/password-rules'
 import { allPasswordRulesMet } from '../../shared/utils/passwordValidation'
 
-/** Port of React's pages/auth/Signup. */
 @Component({
   selector: 'app-signup',
   imports: [

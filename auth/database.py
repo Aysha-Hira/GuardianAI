@@ -1,5 +1,3 @@
-"""Database engine and session factory (PostgreSQL, or SQLite fallback)."""
-
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -34,7 +32,6 @@ Base = declarative_base()
 
 
 def _migrate_users_table() -> None:
-    """Add security columns to databases created before they existed."""
     from sqlalchemy import inspect, text
 
     inspector = inspect(engine)
@@ -63,10 +60,10 @@ def _migrate_users_table() -> None:
 
 
 def init_db() -> None:
-    from auth import models  # noqa: F401
-    from alerts import db as _alerts_db  # noqa: F401  (alerts table)
-    from watchlist import db as _watchlist_db  # noqa: F401  (watchlist table)
-    from subscriptions import db as _subscriptions_db  # noqa: F401  (subscriptions table)
+    from auth import models
+    from alerts import db as _alerts_db
+    from watchlist import db as _watchlist_db
+    from subscriptions import db as _subscriptions_db
     from auth.seed import seed_test_user
     from auth.service import cleanup_pending_registrations, migrate_unverified_users_to_pending
 
@@ -100,7 +97,6 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def db_session() -> Generator[Session, None, None]:
-    """FastAPI dependency."""
     db = SessionLocal()
     try:
         yield db

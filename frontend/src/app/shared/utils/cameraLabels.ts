@@ -1,6 +1,5 @@
 import type { CameraChannel } from '../types'
 
-/** Resolve CCTV channel id from alert metadata. */
 export function parseCameraIdFromAlert(alert: {
   camera_id?: number
   camera: string
@@ -36,7 +35,6 @@ export function feedStatusTone(
   return 'offline'
 }
 
-/** Count CCTV 01–05 feeds that are live (webcam online or video loaded; excludes searching). */
 export function countLiveFeeds(cameras: CameraChannel[]): number {
   return cameras
     .filter((c) => c.id >= 1 && c.id <= 5)

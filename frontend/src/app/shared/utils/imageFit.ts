@@ -1,4 +1,3 @@
-/** Fit image dimensions inside a max box while preserving aspect ratio. */
 export function fitInBox(
   imgW: number,
   imgH: number,

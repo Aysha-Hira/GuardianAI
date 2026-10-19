@@ -42,7 +42,6 @@ function placeholderForSlot(id: number): CameraChannel {
   }
 }
 
-/** Always return CCTV 01–05, filling gaps from the API with placeholders. */
 export function normalizeWallCameras(cameras: CameraChannel[]): CameraChannel[] {
   return [1, 2, 3, 4, 5].map((id) => cameras.find((c) => c.id === id) ?? placeholderForSlot(id))
 }

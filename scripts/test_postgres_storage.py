@@ -1,8 +1,3 @@
-"""
-Self-test for the PostgreSQL storage. Uses throw-away test data and removes it afterwards.
-
-    .venv/bin/python scripts/test_postgres_storage.py
-"""
 from __future__ import annotations
 
 import os
@@ -13,11 +8,11 @@ ROOT = Path(__file__).resolve().parents[1]
 os.chdir(ROOT)
 sys.path.insert(0, str(ROOT))
 
-import numpy as np  # noqa: E402
-from sqlalchemy import delete, text  # noqa: E402
+import numpy as np
+from sqlalchemy import delete, text
 
-from auth.config import IS_SQLITE  # noqa: E402
-from auth.database import SessionLocal, engine, init_db  # noqa: E402
+from auth.config import IS_SQLITE
+from auth.database import SessionLocal, engine, init_db
 
 ok = True
 
@@ -38,12 +33,11 @@ with engine.connect() as c:
 for t in ("users", "pending_registrations", "alerts", "watchlist_entries"):
     check(f"table {t} exists", IS_SQLITE or t in tables)
 
-# ---------------------------------------------------------------- alerts
 print("Alerts:")
-from alerts import db as alerts_db  # noqa: E402
-from alerts.store import AlertStore  # noqa: E402
-from zones.restricted_zone import SecurityEvent  # noqa: E402
-import inspect as _inspect  # noqa: E402
+from alerts import db as alerts_db
+from alerts.store import AlertStore
+from zones.restricted_zone import SecurityEvent
+import inspect as _inspect
 
 store = AlertStore()
 before = len(store.list_alerts())
@@ -55,7 +49,7 @@ check("alert created", alert is not None)
 aid = alert.id if alert else None
 if aid:
     store.update_status(aid, "acknowledged")
-    reloaded = AlertStore()  # simulates a server restart
+    reloaded = AlertStore()
     got = reloaded.get_alert(aid)
     check("alert survives restart", got is not None)
     check("status change saved", bool(got) and got["status"] == "acknowledged")
@@ -71,10 +65,9 @@ if aid:
         db.execute(delete(alerts_db.AlertRecord).where(alerts_db.AlertRecord.camera_id.in_([98, 99])))
         db.commit()
 
-# ---------------------------------------------------------------- watchlist
 print("Watchlist (encrypted):")
-from watchlist import db as wl_db  # noqa: E402
-from watchlist.store import WatchlistStore  # noqa: E402
+from watchlist import db as wl_db
+from watchlist.store import WatchlistStore
 
 try:
     wl_db.fernet()
@@ -95,7 +88,7 @@ if has_key:
         check("photo stored encrypted", rec is not None and img not in bytes(rec.image_enc))
         check("embedding stored encrypted",
               rec is not None and np.asarray(emb, np.float32).tobytes() not in bytes(rec.embedding_enc))
-    fresh = WatchlistStore()  # restart
+    fresh = WatchlistStore()
     check("photo decrypts correctly", fresh.image_bytes(eid) == img)
     m = fresh.match_embedding(emb)
     check("face match works after restart", m.get("matched") and m.get("watchlist_id") == eid,

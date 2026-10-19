@@ -22,7 +22,6 @@ import {
   groupAlertsByType,
 } from '../shared/utils/chartData'
 
-/** Port of React's pages/Dashboard. */
 @Component({
   selector: 'app-dashboard',
   imports: [

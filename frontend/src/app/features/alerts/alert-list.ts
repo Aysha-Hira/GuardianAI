@@ -7,7 +7,6 @@ import { SeverityBadgeComponent } from '../../shared/ui/severity-badge'
 import { parseCameraIdFromAlert } from '../../shared/utils/cameraLabels'
 import { ClipStatusBadgeComponent } from './clip-status'
 
-/** Port of AlertCard. */
 @Component({
   selector: 'app-alert-card',
   imports: [RouterLink, CameraBadgeComponent, SeverityBadgeComponent, StatusBadgeComponent, ClipStatusBadgeComponent],
@@ -69,7 +68,6 @@ export class AlertCardComponent {
   )
 }
 
-/** Port of AlertList. */
 @Component({
   selector: 'app-alert-list',
   imports: [AlertCardComponent, EmptyStateComponent],

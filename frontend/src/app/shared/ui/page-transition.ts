@@ -1,14 +1,6 @@
 import { DestroyRef, Directive, ElementRef, inject } from '@angular/core'
 import { NavigationEnd, Router } from '@angular/router'
 
-/**
- * Port of React's PageTransition: on every *later* path change scroll <main> to the top and
- * replay the .page-transition fade-in (React did this by re-keying the div).
- *
- * The first navigation is skipped (the CSS animation already plays on first render), and the
- * replay uses the Web Animations API instead of removing/re-adding the class — toggling the class
- * forced a re-layout mid-paint, which Chrome sometimes left blank for the backdrop-blurred cards.
- */
 @Directive({ selector: '[appPageTransition]', host: { class: 'page-transition' } })
 export class PageTransitionDirective {
   constructor() {

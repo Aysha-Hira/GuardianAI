@@ -89,7 +89,6 @@ export const RISK_LEVEL_LABELS: Record<RiskLevel, string> = {
   critical: 'Critical',
 }
 
-/** Last enrollment outcome shown in the match panel (not live CCTV matching). */
 export interface EnrollmentResult {
   success: boolean
   entry?: WatchlistEntry

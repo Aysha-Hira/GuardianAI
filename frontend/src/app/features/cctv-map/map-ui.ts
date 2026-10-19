@@ -9,7 +9,6 @@ import { getAlertsForCamera, getAreaAlertCount, isActiveAlert } from '../../shar
 import { rotateSitePoint } from '../../shared/utils/isoMapGeometry'
 import { MapTwinSceneComponent } from './map-scene'
 
-/** Port of MapAreaIcon. */
 @Component({
   selector: 'app-map-area-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,7 +62,6 @@ export class MapAreaIconComponent {
   protected readonly cn = computed(() => `cctv-area-icon-svg ${this.extraClass()}`.trim())
 }
 
-/** Port of MapCommandBar. */
 @Component({
   selector: 'app-map-command-bar',
   imports: [RouterLink],
@@ -105,7 +103,6 @@ export class MapCommandBarComponent {
   readonly activeIncidents = input.required<number>()
 }
 
-/** Port of MapLocationPanel. */
 @Component({
   selector: 'app-map-location-panel',
   imports: [RouterLink, MapAreaIconComponent],
@@ -179,7 +176,6 @@ export class MapLocationPanelComponent {
   })
 }
 
-/** Port of MapSiteMarkers. */
 @Component({
   selector: 'app-map-site-markers',
   imports: [IconComponent, MapAreaIconComponent],
@@ -258,7 +254,6 @@ export class MapSiteMarkersComponent {
   })
 }
 
-/** Port of MapFloatingPreview. */
 @Component({
   selector: 'app-map-floating-preview',
   imports: [IconComponent],
@@ -373,7 +368,6 @@ export class MapFloatingPreviewComponent {
   }
 }
 
-/** Port of MapViewportControls. */
 @Component({
   selector: 'app-map-viewport-controls',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -420,7 +414,6 @@ export class MapViewportControlsComponent {
   })
 }
 
-/** Port of CctvMapCanvas. */
 @Component({
   selector: 'app-cctv-map-canvas',
   imports: [MapTwinSceneComponent, MapSiteMarkersComponent, MapFloatingPreviewComponent, MapViewportControlsComponent],

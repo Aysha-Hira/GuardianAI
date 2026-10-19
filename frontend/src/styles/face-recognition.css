@@ -1,4 +1,3 @@
-/* Face Recognition — aligned with Guardian dashboard */
 .fr-page {
   --fr-bg: transparent;
   --fr-panel: #131820;
@@ -233,7 +232,6 @@
   color: var(--fr-muted);
 }
 
-/* Upload */
 .fr-upload-panel,
 .fr-form-panel,
 .fr-watchlist-panel,
@@ -363,7 +361,6 @@
   font-size: 0.78rem;
 }
 
-/* Scanner */
 .fr-scanner-panel .fr-scanner-stage {
   padding: 1.15rem;
 }
@@ -448,7 +445,6 @@
   filter: contrast(1.12) saturate(1.05) brightness(1.06);
 }
 
-/* Face mesh overlay — UI demo only */
 .fr-face-mesh-layer {
   position: absolute;
   inset: 0;
@@ -1206,7 +1202,6 @@
   width: 100%;
 }
 
-/* Form */
 .fr-form {
   padding: 1rem;
   display: flex;
@@ -1283,7 +1278,6 @@
   color: #fca5a5;
 }
 
-/* Watchlist */
 .fr-watchlist-empty {
   padding: 1.25rem 1rem;
   font-size: 0.78rem;
@@ -1421,7 +1415,6 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
-/* Match panel */
 .fr-match-body {
   padding: 1rem;
 }

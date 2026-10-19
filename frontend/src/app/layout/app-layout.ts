@@ -5,7 +5,6 @@ import { PageTransitionDirective } from '../shared/ui/page-transition'
 import { HeaderComponent } from './header'
 import { SidebarComponent } from './sidebar'
 
-/** Port of React's AppLayout. */
 @Component({
   selector: 'app-layout',
   imports: [RouterOutlet, SidebarComponent, HeaderComponent, PageTransitionDirective],
@@ -29,7 +28,6 @@ export class AppLayoutComponent {
   constructor() {
     const auth = inject(AuthService)
     const router = inject(Router)
-    // React re-rendered ProtectedRoute when the session ended; here we react to the signal.
     effect(() => {
       if (!auth.isAuthenticated()) void router.navigate(['/login'], { replaceUrl: true })
     })

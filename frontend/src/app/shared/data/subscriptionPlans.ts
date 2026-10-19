@@ -1,6 +1,5 @@
 import type { BillingPeriod, SubscriptionPlan } from '../types/subscription'
 
-/** Annual billing = 12 months minus 15% (the server uses the same formula). */
 export const ANNUAL_DISCOUNT = 0.15
 
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
@@ -58,7 +57,6 @@ export function getPlanById(id: string | null | undefined): SubscriptionPlan | u
   return SUBSCRIPTION_PLANS.find((p) => p.id === id)
 }
 
-/** Price before VAT for one billing period. */
 export function planPrice(plan: SubscriptionPlan, period: BillingPeriod): number {
   return period === 'year' ? Math.round(plan.priceAed * 12 * (1 - ANNUAL_DISCOUNT)) : plan.priceAed
 }

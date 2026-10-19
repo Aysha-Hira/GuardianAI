@@ -8,7 +8,6 @@ export interface Rect extends Size {
   top: number
 }
 
-/** object-fit: contain — where the image actually renders inside its box */
 export function getContainedImageRect(container: Size, image: Size): Rect {
   if (container.width <= 0 || container.height <= 0 || image.width <= 0 || image.height <= 0) {
     return { left: 0, top: 0, width: 0, height: 0 }

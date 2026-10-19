@@ -9,7 +9,7 @@ import type {
 
 import { getCsrfToken } from './authStorage'
 
-const API_BASE = '/api' // proxied to the FastAPI backend (proxy.conf.json)
+const API_BASE = '/api'
 
 class ApiError extends Error {
   status: number
@@ -29,7 +29,6 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
 
 function buildHeaders(init?: RequestInit): Headers {
   const headers = new Headers(init?.headers)
-  // Session cookie is sent automatically; echo the CSRF cookie for state-changing requests.
   const csrf = getCsrfToken()
   if (csrf) headers.set('X-CSRF-Token', csrf)
   if (init?.body && !(init.body instanceof FormData) && !headers.has('Content-Type')) {
@@ -54,7 +53,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       const body = (await response.json()) as { detail?: string | unknown[] }
       if (typeof body.detail === 'string') detail = body.detail
     } catch {
-      /* ignore */
     }
     throw new ApiError(detail, response.status)
   }

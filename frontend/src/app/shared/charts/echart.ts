@@ -1,7 +1,3 @@
-/**
- * ECharts replaces Recharts (React-only). The helpers below reproduce the React charts' look:
- * dark tooltip (#131820 / #2a3142), dashed #1a2030 grid, #7a8499 11px ticks, no axis lines.
- */
 import { afterNextRender, DestroyRef, Directive, effect, ElementRef, inject, input } from '@angular/core'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
@@ -12,7 +8,6 @@ echarts.use([LineChart, BarChart, PieChart, GridComponent, TooltipComponent, Leg
 
 export type ChartOption = echarts.EChartsCoreOption
 
-/** <div appEchart [option]="opt" style="height: 220px"></div> */
 @Directive({ selector: '[appEchart]', host: { style: 'width: 100%' } })
 export class EchartDirective {
   readonly option = input.required<ChartOption>()
@@ -51,7 +46,6 @@ export const TOOLTIP = {
   extraCssText: 'border-radius: 8px; box-shadow: 0 4px 24px rgba(0,0,0,0.4);',
 }
 
-/** Dark hover band behind bars (Recharts cursor fill). */
 const SHADOW_POINTER = { type: 'shadow', shadowStyle: { color: 'rgba(42, 49, 66, 0.45)' } }
 
 function valueAxis(extra: Record<string, unknown> = {}) {
@@ -84,7 +78,6 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`
 }
 
-/** Area chart (Recharts <AreaChart> with a fading gradient). */
 export function areaOption(
   labels: string[],
   series: { name: string; data: number[]; color: string; fillOpacity?: number }[],
@@ -113,7 +106,6 @@ export function areaOption(
   }
 }
 
-/** Line chart without fill. */
 export function lineOption(
   labels: string[],
   series: { name: string; data: number[]; color: string; dashed?: boolean }[],
@@ -124,14 +116,12 @@ export function lineOption(
     tooltip: { trigger: 'axis', ...TOOLTIP, axisPointer: { type: 'line', lineStyle: { color: '#2a3142' } } },
     legend: opts.legend ? { top: 0, textStyle: AXIS_TICK, icon: 'roundRect', itemWidth: 10, itemHeight: 3 } : undefined,
     xAxis: categoryAxis(labels, { boundaryGap: false }),
-    // Counts (people, tracks) must not get 0.2-person ticks; pass decimals: true for rates.
     yAxis: valueAxis(opts.decimals ? { minInterval: undefined } : {}),
     series: series.map((s) => ({
       type: 'line',
       name: s.name,
       data: s.data,
       smooth: true,
-      // Like Recharts' type="monotone": never overshoots between points (no dips to 0.6 people).
       smoothMonotone: 'x',
       symbol: 'none',
       lineStyle: { color: s.color, width: 2, type: s.dashed ? 'dashed' : 'solid' },
@@ -140,7 +130,6 @@ export function lineOption(
   }
 }
 
-/** Horizontal bar chart (Recharts layout="vertical"). */
 export function horizontalBarOption(
   labels: string[],
   values: number[],
@@ -169,7 +158,6 @@ export function horizontalBarOption(
   }
 }
 
-/** Vertical bar chart (one or more series). */
 export function barOption(
   labels: string[],
   series: { name: string; data: number[]; color: string | string[]; stack?: string }[],
@@ -197,7 +185,6 @@ export function barOption(
   }
 }
 
-/** Donut chart (Recharts <Pie innerRadius outerRadius paddingAngle>). */
 export function donutOption(
   data: { name: string; value: number; fill: string }[],
   opts: { inner?: number; outer?: number; padAngle?: number } = {},

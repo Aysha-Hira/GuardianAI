@@ -65,13 +65,11 @@ export async function detectFaceLandmarks(imageUrl: string): Promise<NormalizedL
   return result.faceLandmarks?.[0] ?? null
 }
 
-/** MediaPipe indices used for face-region bounds */
 export const FACE_OVAL_INDICES = [
   10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152,
   148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109,
 ]
 
-/** Curated spy-style mesh connections (MediaPipe landmark indices) */
 export const SPY_MESH_EDGES: [number, number][] = [
   [234, 93], [93, 132], [132, 58], [58, 172], [172, 136], [136, 150], [150, 149], [149, 176],
   [176, 148], [148, 152], [152, 377], [377, 400], [400, 378], [378, 379], [379, 365], [365, 397],

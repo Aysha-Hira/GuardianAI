@@ -1,30 +1,24 @@
-# ---- Secrets (never commit) ----
 .env
 .env.*
 !.env.example
 
-# ---- Python ----
 .venv/
 .venv-*/
 __pycache__/
 *.pyc
 
-# ---- Node / Angular ----
 node_modules/
 dist/
 .angular/
 .ngcheck/
 out-tsc/
 
-# ---- Old React frontend (kept locally only) ----
 frontend-react-old/
 
-# ---- Large model weights (downloaded automatically / by setup scripts) ----
 yolo*.pt
 data/deepface/
 data/multicam/embeddings/
 
-# ---- Datasets and private data (see data/*/README.md for how to get them) ----
 data/guardian.db
 *.db
 *.sqlite3
@@ -35,7 +29,6 @@ data/watchlist/*
 data/behavior/clips/
 test_videos/
 
-# ---- Runtime output ----
 uploads/*
 !uploads/.gitkeep
 outputs/*
@@ -44,7 +37,6 @@ snapshots/**/*
 !snapshots/.gitkeep
 *.log
 
-# ---- Leftovers / backups ----
 _backup_*/
 _github_copy/
 github-upload/
@@ -53,19 +45,6 @@ _gitignore_old.txt
 *.bak*
 *.orig
 
-# ---- OS / editors ----
 .DS_Store
 .idea/
 .vscode/
-
-# ---- From the detection pipeline (ai/) ----
-*.pth
-datasets/
-virtual_environment/
-output_*.mp4
-checkpoint.json
-*.zip
-ai/behaviour/datasets/
-ai\videos
-crowd_human/
-ai/models/*.pt

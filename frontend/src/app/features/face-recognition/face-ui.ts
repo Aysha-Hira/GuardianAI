@@ -1,4 +1,3 @@
-/** Ports of React's components/face-recognition/*. Each renders the same root element/classes as React. */
 import {
   ChangeDetectionStrategy,
   Component,
@@ -41,7 +40,6 @@ import {
 
 const CONTENTS = { style: 'display: contents' }
 
-/* ---------------- BiometricStatus ---------------- */
 type EngineState = 'offline' | 'weights_missing' | 'ready' | 'scanning' | 'complete' | 'error' | 'no-image'
 const STATE_COPY: Record<EngineState, { label: string; detail: string; tone: 'muted' | 'accent' | 'warn' | 'info' }> = {
   offline: { label: 'Engine offline', detail: 'DeepFace worker unavailable', tone: 'warn' },
@@ -86,7 +84,6 @@ export class BiometricStatusComponent {
   readonly copy = computed(() => STATE_COPY[this.state()])
 }
 
-/* ---------------- MatchResultPanel ---------------- */
 @Component({
   selector: 'app-match-result-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -144,7 +141,6 @@ export class MatchResultPanelComponent {
         : this.scanState() === 'error' ? 'Failed' : 'Awaiting')
 }
 
-/* ---------------- FaceUploader ---------------- */
 const ACCEPT = ['image/jpeg', 'image/jpg', 'image/png']
 const MAX_BYTES = 5 * 1024 * 1024
 
@@ -256,7 +252,6 @@ export class FaceUploaderComponent {
   }
 }
 
-/* ---------------- FaceMeshOverlay ---------------- */
 export interface ViewportFaceData {
   points: { x: number; y: number }[]
   bounds: Rect
@@ -391,7 +386,6 @@ export class FaceMeshOverlayComponent {
   })
 }
 
-/* ---------------- FaceScanner ---------------- */
 const SCAN_LOG = [
   'INITIALIZING…',
   'IMAGE ACQUIRED',
@@ -575,7 +569,6 @@ export class FaceScannerComponent {
   private readonly detectError = signal<string | null>(null)
 
   constructor() {
-    // Track the viewport size (React: ResizeObserver keyed on image).
     effect((onCleanup) => {
       const el = this.viewport()?.nativeElement
       if (!el) return
@@ -586,7 +579,6 @@ export class FaceScannerComponent {
       onCleanup(() => observer.disconnect())
     })
 
-    // Detect landmarks whenever the image URL changes (React: useFaceLandmarks).
     effect((onCleanup) => {
       const imageUrl = this.image()?.objectUrl ?? null
       untracked(() => {
@@ -647,7 +639,6 @@ export class FaceScannerComponent {
     Math.min(SCAN_LOG.length - 1, Math.floor((this.progress() / 100) * (SCAN_LOG.length - 1))))
 }
 
-/* ---------------- WatchlistForm ---------------- */
 export interface WatchlistFormValues {
   fullName: string
   category: WatchlistCategory
@@ -663,7 +654,6 @@ const DEFAULT_FORM: WatchlistFormValues = { fullName: '', category: 'general', r
   template: `
     <section class="fr-panel fr-form-panel" aria-labelledby="watchlist-form-title">
       <div class="fr-panel-head"><h3 id="watchlist-form-title" class="fr-panel-title">Enroll subject</h3></div>
-      <!-- Re-created on reset so DOM values match the cleared state (React's controlled reset). -->
       @for (k of [formKey()]; track k) {
       <form class="fr-form" (submit)="handleSubmit($event)">
         <label class="fr-field">
@@ -739,7 +729,6 @@ export class WatchlistFormComponent {
   }
 }
 
-/* ---------------- WatchlistPanel ---------------- */
 function formatTime(ts?: number) {
   if (!ts) return '—'
   return new Date(ts * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })

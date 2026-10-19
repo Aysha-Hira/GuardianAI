@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core'
 import { RouterLink, RouterOutlet } from '@angular/router'
 import { PageTransitionDirective } from '../shared/ui/page-transition'
 
-/** Port of React's AuthLayout. */
 @Component({
   selector: 'app-auth-layout',
   imports: [RouterLink, RouterOutlet, PageTransitionDirective],

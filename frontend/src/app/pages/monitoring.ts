@@ -8,7 +8,6 @@ import {
   MonitorToastComponent,
 } from '../features/monitor/side-panels'
 
-/** Port of React's pages/Monitoring + monitor/MonitorPage. */
 @Component({
   selector: 'app-monitoring',
   imports: [

@@ -20,7 +20,6 @@ import { parseCameraIdFromAlert } from '../../shared/utils/cameraLabels'
 import { clipIsPending } from './clip-status'
 import { IncidentEvidencePanelComponent } from './evidence'
 
-/** Port of IncidentActionDialog. */
 @Component({
   selector: 'app-incident-action-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,7 +71,6 @@ function actionButtonClass(action: AlertAction): string {
   return 'incident-action-btn--ghost'
 }
 
-/** Port of IncidentDetails. */
 @Component({
   selector: 'app-incident-details',
   imports: [
@@ -238,7 +236,6 @@ export class IncidentDetailsComponent {
   private readonly clipPending = computed(() => clipIsPending(this.alert()?.incident_clip_status))
 
   constructor() {
-    // Load whenever the selected alert changes (React: useEffect on alertId).
     effect(() => {
       const id = this.alertId()
       untracked(() => {
@@ -247,7 +244,6 @@ export class IncidentDetailsComponent {
       })
     })
 
-    // While the clip is recording/processing, refresh every 1.5 s.
     let timer: number | undefined
     effect(() => {
       const id = this.alertId()

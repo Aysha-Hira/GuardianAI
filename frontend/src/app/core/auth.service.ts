@@ -10,7 +10,6 @@ import {
 } from '../shared/services/authStorage'
 import type { AuthUser, LoginInput, MfaChallenge, SignupInput } from '../shared/types/auth'
 
-/** Angular port of React's AuthContext. Session = HttpOnly cookie; nothing secret in JS. */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly user = signal<AuthUser | null>(null)
@@ -18,7 +17,6 @@ export class AuthService {
   readonly isAuthenticated = computed(() => Boolean(this.user()?.emailVerified))
 
   constructor() {
-    // Any API 401 → the server rejected the session; drop it locally.
     setUnauthorizedHandler(() => this.endLocalSession())
   }
 
@@ -39,13 +37,11 @@ export class AuthService {
     this.pendingEmail.set(null)
   }
 
-  /** Explicit sign-out: server clears the cookies and revokes the token. */
   logout() {
     void authApi.logout().catch(() => {})
     this.endLocalSession()
   }
 
-  /** Returns a challenge when two-step sign-in is on (the emailed code is still needed). */
   async login(input: LoginInput): Promise<MfaChallenge | null> {
     const result = await authApi.login({
       email: input.email,

@@ -2,7 +2,6 @@ import { effect, Injectable, signal } from '@angular/core'
 
 const STORAGE_KEY = 'guardian_sidebar_collapsed'
 
-/** Port of React's SidebarContext. */
 @Injectable({ providedIn: 'root' })
 export class SidebarService {
   readonly collapsed = signal<boolean>(readCollapsed())
@@ -14,7 +13,6 @@ export class SidebarService {
       try {
         localStorage.setItem(STORAGE_KEY, value)
       } catch {
-        /* ignore */
       }
     })
   }

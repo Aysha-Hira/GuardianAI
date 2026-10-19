@@ -45,7 +45,6 @@ function cardProcessingSteps(brand: 'visa' | 'mastercard', last4: string): strin
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-/** Port of React's pages/SubscriptionCheckout (simulated payment — nothing is charged or stored). */
 @Component({
   selector: 'app-subscription-checkout',
   imports: [
@@ -236,7 +235,6 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 export class SubscriptionCheckoutPage {
   private readonly router = inject(Router)
   private readonly query = inject(ActivatedRoute).snapshot.queryParamMap
-  /** Only paid plans can be bought; Free is the default for everyone. */
   protected readonly plan = (() => {
     const p = getPlanById(this.query.get('plan'))
     return p && p.id !== 'free' ? p : undefined
@@ -278,7 +276,6 @@ export class SubscriptionCheckoutPage {
     if (!this.plan) void this.router.navigate(['/subscription'], { replaceUrl: true })
   }
 
-  /** Controlled input with formatting (React re-rendered the formatted value). */
   protected setFormatted(event: Event, target: { set(v: string): void }, format: (v: string) => string) {
     const el = event.target as HTMLInputElement
     const value = format(el.value)
@@ -327,7 +324,6 @@ export class SubscriptionCheckoutPage {
     this.processing.set(true)
     this.payError.set(null)
 
-    // The plan is saved to the signed-in account on the server while the animation runs.
     const saved = this.subscriptions
       .checkout({
         plan_id: plan.id as 'professional' | 'enterprise',

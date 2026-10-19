@@ -1,7 +1,7 @@
 import type { AuthUser, MfaChallenge } from '../types/auth'
 import { getCsrfToken } from './authStorage'
 
-const API_BASE = '/api' // proxied to the FastAPI backend (proxy.conf.json)
+const API_BASE = '/api'
 
 export class AuthApiError extends Error {
   status: number
@@ -53,7 +53,6 @@ async function authRequest<T>(path: string, init?: RequestInit): Promise<T> {
     try {
       message = parseDetail(await response.json())
     } catch {
-      /* ignore */
     }
     throw new AuthApiError(message, response.status)
   }

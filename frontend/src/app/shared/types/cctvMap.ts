@@ -1,4 +1,3 @@
-/** Site map zone linked to a CCTV channel + video zone index. */
 import type { Alert } from './index'
 
 export type MapAreaIconKind = 'building' | 'parking' | 'road' | 'perimeter' | 'remote'
@@ -8,10 +7,8 @@ export interface MapZone {
   label: string
   cameraId: number
   zoneIndex: number
-  /** SVG polygon points (viewBox coords). */
   points: string
   areaId: string
-  /** Optional — road / YOLO detection lane. */
   yoloReady?: boolean
 }
 
@@ -21,16 +18,12 @@ export interface MapArea {
   subtitle: string
   cameraId: number
   accent: string
-  /** Floating card accent (reference-style tags). */
   cardColor: string
   icon: MapAreaIconKind
-  /** Card anchor (% of map viewport). */
   cardX: number
   cardY: number
-  /** Scene center for wireframe highlight. */
   sceneX: number
   sceneY: number
-  /** Shown on map pin when the remote feed is unreachable. */
   downMessage?: string
 }
 
@@ -43,17 +36,13 @@ export interface MapBuilding {
   accent: string
 }
 
-/** Site entrance gate — rendered as barrier posts, not a building mass. */
 export interface MapGate {
   id: string
   label: string
   areaId: string
-  /** Center of the gate opening (viewBox coords). */
   cx: number
-  /** Ground line where posts meet the road. */
   y: number
   width: number
-  /** Visual scale — default 1. */
   scale?: number
 }
 

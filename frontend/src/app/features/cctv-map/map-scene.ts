@@ -21,7 +21,6 @@ const STARS: [number, number][] = [
   [45, 320], [620, 90], [180, 420], [850, 380], [420, 520],
 ]
 
-/** Dark isometric pine (React SceneTree). */
 function treeGroup(cx: number, cy: number, r: number): SvgGroup {
   const s = r / 10
   return {
@@ -36,7 +35,6 @@ function treeGroup(cx: number, cy: number, r: number): SvgGroup {
   }
 }
 
-/** Car marker on the access road (React SceneVehicle). */
 function vehicleGroup(t: number): SvgGroup {
   const { x, y, angle } = pointOnMapRoad(t)
   return {
@@ -51,7 +49,6 @@ function vehicleGroup(t: number): SvgGroup {
   }
 }
 
-/** Entrance gate — posts, barrier arm, fence wings (React SceneGate). */
 function gateGroup(g: MapGate, selected: boolean): SvgGroup {
   const { cx, y, width } = g
   const scale = g.scale ?? 1
@@ -118,7 +115,6 @@ function gateGroup(g: MapGate, selected: boolean): SvgGroup {
   }
 }
 
-/** Port of React's MapTwinScene (isometric site twin). */
 @Component({
   selector: 'app-map-twin-scene',
   imports: [NgTemplateOutlet, SvgAttrsDirective],
@@ -245,7 +241,6 @@ export class MapTwinSceneComponent {
   protected readonly gates = computed(() => MAP_GATES.map((g) => gateGroup(g, this.selectedAreaId() === g.areaId)))
   protected readonly glow = computed(() => rotateSitePoint(500, 310, this.orbitYaw()))
 
-  /** Buildings re-projected for the orbit angle and depth-sorted (React StructureMass). */
   protected readonly buildings = computed(() => {
     const yaw = this.orbitYaw()
     const view3d = this.view3d()

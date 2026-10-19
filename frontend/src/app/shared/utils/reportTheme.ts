@@ -1,26 +1,15 @@
-/** Shared light palette for Excel / PDF exports (readable on white paper). */
 export const EXPORT_THEME = {
-  /** Primary body text — slate 800 */
   text: 'FF1E293B',
-  /** Secondary labels */
   muted: 'FF64748B',
-  /** Brand accent — emerald 600 (readable on white) */
   accent: 'FF059669',
-  /** Table header background — slate 700 */
   headerBg: 'FF334155',
-  /** Header text on dark band */
   headerText: 'FFFFFFFF',
-  /** Table borders */
   border: 'FFCBD5E1',
-  /** Alternating row */
   rowAlt: 'FFF8FAFC',
-  /** White row */
   row: 'FFFFFFFF',
-  /** Status / clearance banner */
   clearanceBg: 'FFECFDF5',
   clearanceBorder: 'FF6EE7B7',
   clearanceText: 'FF047857',
-  /** Info banner (has incidents) */
   infoBg: 'FFEFF6FF',
   infoBorder: 'FF93C5FD',
   infoText: 'FF1D4ED8',
@@ -40,7 +29,6 @@ export const PDF_RGB = {
   clearanceText: [4, 120, 87] as [number, number, number],
 }
 
-/** jsPDF-autotable styles for light professional tables. */
 export const PDF_TABLE_STYLES = {
   theme: 'grid' as const,
   headStyles: {

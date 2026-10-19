@@ -8,7 +8,6 @@ import type { SubscriptionReceipt } from '../shared/types/subscription'
 import { PageHeaderComponent } from '../shared/ui/common'
 import { formatAedDetailed, loadReceipt } from '../shared/utils/subscriptionMock'
 
-/** Port of React's pages/SubscriptionConfirmation. */
 @Component({
   selector: 'app-subscription-confirmation',
   imports: [RouterLink, PageHeaderComponent, CardBrandMarkComponent, SecureCheckoutStripComponent],

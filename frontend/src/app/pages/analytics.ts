@@ -29,7 +29,6 @@ function summarizeTracks(tracks: TrackSummary[]) {
   return { inZoneCount, loiteringCount, avgDuration }
 }
 
-/** Port of React's pages/Analytics (+ useOperationalSeries). */
 @Component({
   selector: 'app-analytics',
   imports: [
@@ -197,7 +196,6 @@ export class AnalyticsPage {
   readonly settingsPoll = createPoll(api.getSettings, 10000, POLL_KEYS.settings)
   readonly statusPoll = createPoll(api.getStatus, 3000, POLL_KEYS.status)
 
-  /** useOperationalSeries(48): append a point whenever a new status arrives. */
   readonly series = signal<OperationalPoint[]>([])
 
   constructor() {
@@ -268,7 +266,6 @@ export class AnalyticsPage {
       { name: 'People', data: s.map((p) => p.people), color: '#34d399' },
       { name: 'Tracks', data: s.map((p) => p.tracks), color: '#60a5fa' },
     ], { legend: true })
-    // Recharts drew its <Legend> under the plot; match that placement.
     return {
       ...opt,
       grid: { top: 8, right: 8, left: 0, bottom: 28, containLabel: true },

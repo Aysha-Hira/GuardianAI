@@ -8,14 +8,8 @@ export type IconName =
   | 'activity' | 'users' | 'alert-triangle' | 'search' | 'video'
   | 'camera' | 'cctv' | 'check-circle'
 
-/** Icons drawn with fill instead of stroke (React: fill="currentColor", no stroke). */
 const FILLED: ReadonlySet<IconName> = new Set<IconName>(['camera', 'cctv'])
 
-/**
- * Same SVGs as React's components/common/Icons.tsx.
- * Usage: <svg appIcon="dashboard" class="h-4 w-4" aria-hidden="true"></svg>
- * (attribute selector → the DOM is a plain <svg>, exactly like React's).
- */
 @Component({
   selector: 'svg[appIcon]',
   changeDetection: ChangeDetectionStrategy.OnPush,

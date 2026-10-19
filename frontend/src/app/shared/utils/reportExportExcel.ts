@@ -99,7 +99,6 @@ export async function exportReportExcelStyled(
     properties: { defaultRowHeight: 18 },
   })
 
-  // Title block
   ws.mergeCells('A1:F1')
   const brand = ws.getCell('A1')
   brand.value = 'GUARDIAN AI'
@@ -196,7 +195,6 @@ export async function exportReportExcelStyled(
   ws.getColumn(1).width = 24
   ws.getColumn(2).width = 40
 
-  // Incidents sheet
   const inc = wb.addWorksheet('Incidents', { views: [{ showGridLines: true }] })
   const incHeaders = [
     'Incident ID', 'Timestamp', 'Event', 'Event Type', 'Camera', 'Zone',

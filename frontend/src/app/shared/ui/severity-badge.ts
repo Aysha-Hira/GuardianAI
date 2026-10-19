@@ -8,7 +8,6 @@ const STYLES: Record<AlertSeverity, string> = {
   critical: 'bg-red-950/60 text-red-200 ring-red-700/50',
 }
 
-/** Port of React's SeverityBadge. Usage: <span appSeverityBadge [severity]="..." [label]="..."></span> */
 @Component({
   selector: 'span[appSeverityBadge]',
   changeDetection: ChangeDetectionStrategy.OnPush,

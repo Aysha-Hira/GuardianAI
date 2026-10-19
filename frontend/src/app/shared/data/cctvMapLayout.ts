@@ -71,7 +71,6 @@ export const MAP_AREAS: MapArea[] = [
   },
 ]
 
-/** Dark monochrome footprints — rendered as subtle 3D silhouettes, not colored overlays. */
 export const MAP_BUILDINGS: MapBuilding[] = [
   {
     id: 'building-main',
@@ -99,7 +98,6 @@ export const MAP_BUILDINGS: MapBuilding[] = [
   },
 ]
 
-/** Entrance gates — barrier arms + fence posts (not 3D building blocks). */
 export const MAP_GATES: MapGate[] = [
   {
     id: 'gate-north',
@@ -114,7 +112,6 @@ export const MAP_GATES: MapGate[] = [
 
 export const MAP_LAKE = { cx: 520, cy: 330, rx: 120, ry: 65 }
 
-/** Neon walkways — routed in front of buildings, not through them. */
 export const MAP_PATHS: MapPath[] = [
   { d: 'M 500 92 Q 500 118 500 162 Q 500 210 500 268' },
   { d: 'M 280 400 Q 360 330 430 300 T 500 285' },
@@ -122,7 +119,6 @@ export const MAP_PATHS: MapPath[] = [
   { d: 'M 300 410 Q 500 470 700 410' },
 ]
 
-/** Curved access road — lower on the site island */
 export const MAP_ROAD_PATH =
   'M 140,445 Q 310,535 500,518 Q 690,500 860,442'
 
@@ -154,7 +150,6 @@ export const MAP_TREES: MapTree[] = [
   { cx: 600, cy: 575, r: 9 },
 ]
 
-/** Sidebar — all site cameras including access road and remote down feed. */
 export const SIDEBAR_AREAS: MapArea[] = MAP_AREAS
 
 export const MAP_ZONES: MapZone[] = [

@@ -1,7 +1,4 @@
 #!/bin/bash
-# One-time PostgreSQL setup for Guardian AI (Postgres.app on macOS).
-# Creates a dedicated 'guardian' login + database, writes the connection URL and the
-# watchlist encryption key to .env, installs the driver, and copies existing users over.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

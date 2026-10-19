@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core'
 
-/** Port of React's AuthAlert. Usage: <div appAuthAlert variant="error">…</div> */
 @Component({
   selector: 'div[appAuthAlert]',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -11,7 +10,6 @@ export class AuthAlertComponent {
   readonly variant = input<'error' | 'success' | 'info'>('info')
 }
 
-/** Port of React's AuthDemoBanner. Usage: <div appAuthDemoBanner bannerTitle="…">…</div> */
 @Component({
   selector: 'div[appAuthDemoBanner]',
   changeDetection: ChangeDetectionStrategy.OnPush,

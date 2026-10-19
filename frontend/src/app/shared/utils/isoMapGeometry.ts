@@ -1,7 +1,5 @@
-/** Isometric extrusion helpers for the CCTV site map SVG. */
-
-const ISO_X = 0.8660254 // cos(30°)
-const ISO_Y = 0.5 // sin(30°)
+const ISO_X = 0.8660254
+const ISO_Y = 0.5
 
 export function parsePoints(raw: string): [number, number][] {
   return raw.split(' ').map((pair) => {
@@ -17,14 +15,12 @@ export function pointsToString(pts: [number, number][]): string {
 export interface IsoExtrusion {
   floor: string
   roof: string
-  /** Wall quads in paint order (back to front). */
   walls: { points: string; shade: 'dark' | 'mid' | 'light' }[]
   depth: number
 }
 
 export const MAP_SITE_CENTER = { x: 500, y: 360 }
 
-/** Depth key for painter's algorithm (farther = smaller). */
 export function isoDepth(x: number, y: number): number {
   return x + y
 }
@@ -58,11 +54,6 @@ function wallDepth(points: [number, number][]): number {
   return isoDepth(sx / points.length, sy / points.length)
 }
 
-/**
- * Extrude a footprint with fixed screen-space isometric lift.
- * When yawDeg is set, the footprint rotates on the ground first — walls
- * and shading update so orbiting shows the other side of each mass.
- */
 export function extrudePolygon(raw: string, height: number, yawDeg = 0): IsoExtrusion {
   const base = parsePoints(raw).map(([x, y]) => rotateSitePoint(x, y, yawDeg))
   const roof = base.map(([x, y]) => [x - height * ISO_X, y - height * ISO_Y] as [number, number])
@@ -97,7 +88,6 @@ export function polygonCenter(raw: string, yawDeg = 0): [number, number] {
   return [sx / pts.length, sy / pts.length]
 }
 
-/** Project a ground point upward for pin placement on roof. */
 export function isoLift(x: number, y: number, height: number, yawDeg = 0): [number, number] {
   const [rx, ry] = rotateSitePoint(x, y, yawDeg)
   return [rx - height * ISO_X, ry - height * ISO_Y - 8]

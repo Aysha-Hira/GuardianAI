@@ -5,7 +5,6 @@ import { AuthAlertComponent } from '../../shared/ui/auth-alert'
 import { PasswordMatchComponent, PasswordRulesComponent } from '../../shared/ui/password-rules'
 import { allPasswordRulesMet } from '../../shared/utils/passwordValidation'
 
-/** Port of React's pages/auth/ResetPassword. */
 @Component({
   selector: 'app-reset-password',
   imports: [RouterLink, AuthAlertComponent, PasswordRulesComponent, PasswordMatchComponent],

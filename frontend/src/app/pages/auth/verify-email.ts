@@ -15,7 +15,6 @@ import { AuthAlertComponent, AuthDemoBannerComponent } from '../../shared/ui/aut
 
 const CODE_LENGTH = 6
 
-/** Port of React's pages/auth/VerifyEmail. */
 @Component({
   selector: 'app-verify-email',
   imports: [RouterLink, AuthAlertComponent, AuthDemoBannerComponent],
@@ -130,7 +129,7 @@ export class VerifyEmailPage {
   protected onDigitInput(index: number, event: Event) {
     const el = event.target as HTMLInputElement
     const char = el.value.replace(/\D/g, '').slice(-1)
-    el.value = char // keep the box in sync even when the value didn't change (e.g. a letter typed)
+    el.value = char
     const next = [...this.digits()]
     next[index] = char
     this.digits.set(next)

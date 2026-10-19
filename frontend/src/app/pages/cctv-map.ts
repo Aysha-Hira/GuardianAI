@@ -7,7 +7,6 @@ import { ErrorStateComponent, LoadingStateComponent } from '../shared/ui/common'
 import { CCTV_FEED_COUNT, countLiveFeeds } from '../shared/utils/cameraLabels'
 import { getActiveAlerts } from '../shared/utils/cctvMapAlerts'
 
-/** Port of React's pages/CctvMap. */
 @Component({
   selector: 'app-cctv-map',
   imports: [CctvMapCanvasComponent, MapCommandBarComponent, MapLocationPanelComponent, ErrorStateComponent, LoadingStateComponent],

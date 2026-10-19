@@ -145,7 +145,6 @@ export async function exportReportPdf(input: ExportReportInput): Promise<void> {
     y += lines.length * (size * 0.42) + 3
   }
 
-  // Header — light professional cover
   doc.setDrawColor(...PDF_RGB.border)
   doc.setLineWidth(0.4)
   doc.line(margin, 14, pageW - margin, 14)
@@ -165,7 +164,6 @@ export async function exportReportPdf(input: ExportReportInput): Promise<void> {
   doc.text(`Generated ${generatedAt.toLocaleString()}`, margin, 31)
   y = 38
 
-  // Meta panel — light grey box, dark text
   doc.setFillColor(...PDF_RGB.panelBg)
   doc.setDrawColor(...PDF_RGB.border)
   doc.roundedRect(margin, y, pageW - margin * 2, 26, 2, 2, 'FD')
@@ -253,7 +251,6 @@ export async function exportReportPdf(input: ExportReportInput): Promise<void> {
         doc.addImage(chart.img, 'PNG', x, y, dims.width, dims.height)
         y += dims.height + 10
       } catch {
-        /* skip broken chart */
       }
     }
   }
@@ -321,7 +318,6 @@ export async function exportReportPdf(input: ExportReportInput): Promise<void> {
           doc.addImage(dataUrl, 'JPEG', x, y, dims.width, dims.height)
           y += dims.height + 10
         } catch {
-          /* skip */
         }
       }
     }
@@ -426,7 +422,6 @@ export async function exportReportDocx(input: ExportReportInput): Promise<void> 
         w = Math.round(dims.width * 2.6)
         h = Math.round(dims.height * 2.6)
       } catch {
-        /* defaults */
       }
       children.push(
         new Paragraph({ children: [new TextRun({ text: label, bold: true })] }),
@@ -489,7 +484,6 @@ export async function exportReportDocx(input: ExportReportInput): Promise<void> 
         w = Math.round(dims.width * 2.2)
         h = Math.round(dims.height * 2.2)
       } catch {
-        /* defaults */
       }
       children.push(
         new Paragraph({ children: [new TextRun({ text: `${alert.time_label} · ${alert.event_label}`, bold: true })] }),

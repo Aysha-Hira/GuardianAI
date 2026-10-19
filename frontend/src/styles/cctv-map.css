@@ -1,5 +1,3 @@
-/* CCTV Site Map — immersive digital twin */
-
 .cctv-map-page {
   display: flex;
   flex-direction: column;
@@ -16,7 +14,6 @@
   }
 }
 
-/* Command bar */
 .cctv-map-command {
   display: flex;
   flex-wrap: wrap;
@@ -184,7 +181,6 @@
   }
 }
 
-/* Location tree (left) — glass panel */
 .cctv-map-locations {
   display: flex;
   flex-direction: column;
@@ -419,7 +415,6 @@
   text-decoration: underline;
 }
 
-/* Main map viewport */
 .cctv-map-main {
   position: relative;
   display: flex;
@@ -448,7 +443,6 @@
   display: none;
 }
 
-/* Digital twin viewport */
 .cctv-map-canvas-wrap {
   position: relative;
   flex: 1;
@@ -536,7 +530,6 @@
   display: block;
 }
 
-/* 3D structures — dark monochrome */
 .cctv-structure-wall--dark { fill: #1a2230; stroke: rgba(255,255,255,0.03); stroke-width: 0.5; }
 .cctv-structure-wall--mid { fill: #222c3c; stroke: rgba(255,255,255,0.04); stroke-width: 0.5; }
 .cctv-structure-wall--light { fill: #2a3548; stroke: rgba(255,255,255,0.05); stroke-width: 0.5; }
@@ -551,7 +544,6 @@
   50% { stroke-opacity: 0.45; }
 }
 
-/* Entrance gates — barrier + fence, not building masses */
 .cctv-scene-gate-lane {
   fill: rgba(24, 30, 40, 0.85);
   stroke: rgba(255, 255, 255, 0.06);
@@ -640,7 +632,6 @@
   stroke: rgba(34,211,238,0.45);
 }
 
-/* Site markers — pin + tag (reference style) */
 .cctv-map-markers-layer {
   position: absolute;
   inset: 0;
@@ -668,7 +659,6 @@
   z-index: 10;
 }
 
-/** Compact marker for tight map spots (north gate). */
 .cctv-site-marker--compact {
   transform: translate(-50%, -100%) scale(0.82);
 }
@@ -926,7 +916,6 @@
   100% { transform: translateX(-50%) scale(1.4); opacity: 0; }
 }
 
-/* Canvas HUD overlays */
 .cctv-map-hud {
   position: absolute;
   inset: 12px;
@@ -1087,7 +1076,6 @@
   text-align: center;
 }
 
-/* Location detail panel (no live video) */
 .cctv-map-location-hero {
   display: flex;
   align-items: center;
@@ -1233,7 +1221,6 @@
   font-size: 13px;
 }
 
-/* HTML camera pins (float above 3D scene) */
 .cctv-map-pins-layer {
   position: absolute;
   inset: 0;
@@ -1346,7 +1333,6 @@
   margin-left: 0.15rem;
 }
 
-/* Legend */
 .cctv-map-legend {
   position: absolute;
   bottom: 16px;
@@ -1397,7 +1383,6 @@
   border: 1px dashed rgba(52, 211, 153, 0.6);
 }
 
-/* Camera detail panel (right) — glass slide-in */
 .cctv-map-camera-panel {
   display: flex;
   flex-direction: column;
@@ -1604,7 +1589,6 @@
   color: var(--color-guardian-muted, #8b95a8);
 }
 
-/* Raw video preview (no AI) */
 .cctv-map-preview {
   margin: 0 1rem;
 }
@@ -1706,7 +1690,6 @@
   }
 }
 
-/* Floating data preview on map */
 .cctv-map-preview-connector {
   position: absolute;
   inset: 0;

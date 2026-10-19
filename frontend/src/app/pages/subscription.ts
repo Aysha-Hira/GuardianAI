@@ -6,7 +6,6 @@ import type { BillingPeriod, SubscriptionPlan } from '../shared/types/subscripti
 import { PageHeaderComponent } from '../shared/ui/common'
 import { formatAed } from '../shared/utils/subscriptionMock'
 
-/** Port of React's pages/Subscription. */
 @Component({
   selector: 'app-subscription',
   imports: [PageHeaderComponent],

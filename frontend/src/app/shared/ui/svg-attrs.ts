@@ -2,7 +2,6 @@ import { Directive, effect, ElementRef, inject, input } from '@angular/core'
 
 export type SvgAttrs = Record<string, string | number | undefined | null>
 
-/** Sets arbitrary SVG attributes from a record (geometry computed in TypeScript). */
 @Directive({ selector: '[appSvgAttrs]' })
 export class SvgAttrsDirective {
   readonly appSvgAttrs = input.required<SvgAttrs>()

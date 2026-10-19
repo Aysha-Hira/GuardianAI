@@ -26,8 +26,6 @@ export const routes: Routes = [
   { path: 'terms', component: TermsPage },
   { path: 'privacy', component: PrivacyPage },
 
-  // App layout FIRST: an empty-path parent matches '/' even when none of its children do,
-  // so if the auth layout came first, '/' would render an empty sign-in shell.
   {
     path: '',
     component: AppLayoutComponent,

@@ -8,7 +8,6 @@ import { parseCameraIdFromAlert } from '../../shared/utils/cameraLabels'
 import { ClipStatusBadgeComponent } from './clip-status'
 import { IncidentEvidenceThumbComponent } from './evidence'
 
-/** Port of IncidentTable. */
 @Component({
   selector: 'app-incident-table',
   imports: [

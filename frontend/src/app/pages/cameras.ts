@@ -14,7 +14,6 @@ const LEGEND = [
   ['Monitoring', 'Green border + ACTIVE MONITOR = same feed as Monitoring page'],
 ] as const
 
-/** Port of React's pages/Cameras. */
 @Component({
   selector: 'app-cameras',
   imports: [RouterLink, CctvTileComponent, ErrorStateComponent, PageHeaderComponent],

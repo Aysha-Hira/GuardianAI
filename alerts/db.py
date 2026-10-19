@@ -1,5 +1,3 @@
-"""Alert persistence: one row per alert (key fields as columns + full record as JSON)."""
-
 from __future__ import annotations
 
 import dataclasses
@@ -52,29 +50,26 @@ def _row_from_alert(alert) -> dict[str, Any]:
 
 
 def save_alert(alert) -> None:
-    """Insert or update one alert. Never raises — a DB hiccup must not stop the camera loop."""
     try:
         with SessionLocal() as db:
             db.merge(AlertRecord(**_row_from_alert(alert)))
             db.commit()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error("Could not save alert %s: %s", getattr(alert, "id", "?"), exc)
 
 
 def load_alerts() -> list[dict[str, Any]]:
-    """All stored alerts as dataclass field dicts, oldest first."""
     try:
         ensure_table()
         with SessionLocal() as db:
             rows = db.execute(select(AlertRecord.data).order_by(AlertRecord.created_at)).scalars().all()
             return [dict(r) for r in rows]
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error("Could not load alerts from database: %s", exc)
         return []
 
 
 def delete_all_alerts() -> int:
-    """Remove every stored alert row. Returns how many were deleted."""
     from sqlalchemy import delete
 
     ensure_table()

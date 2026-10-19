@@ -14,7 +14,6 @@ import { api } from '../../shared/services/api'
 import type { CameraChannel } from '../../shared/types'
 import { IconComponent } from '../../shared/ui/icon'
 
-/** Port of CctvSearchingSignal. */
 @Component({
   selector: 'app-cctv-searching-signal',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,7 +47,6 @@ export class CctvSearchingSignalComponent {
   readonly variant = input<'tile' | 'dashboard'>('tile')
 }
 
-/** Port of the Cameras page's CameraFeed — polls one channel's JPEG. */
 @Component({
   selector: 'app-camera-feed',
   imports: [CctvSearchingSignalComponent],
@@ -144,7 +142,6 @@ function statusChip(camera: CameraChannel, active: boolean, aiEnabled: boolean):
   return ['cctv-chip-offline', 'OFFLINE']
 }
 
-/** Port of the Cameras page's CctvTile. */
 @Component({
   selector: 'app-cctv-tile',
   imports: [IconComponent, CameraFeedComponent, CctvSearchingSignalComponent],

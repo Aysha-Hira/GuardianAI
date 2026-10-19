@@ -1,4 +1,3 @@
-/** Assign a blob URL to an image, revoking the previous URL only after the new frame loads. */
 export function assignBlobToImage(
   img: HTMLImageElement | null,
   url: string,

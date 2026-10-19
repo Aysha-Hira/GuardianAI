@@ -1,4 +1,3 @@
-/* Copied from the React app's src/index.css (+ auth.css). Keep in sync until React is retired. */
 @import "tailwindcss";
 @import "./styles/auth.css";
 @import "./styles/cameras.css";
@@ -170,7 +169,6 @@
     @apply font-mono tabular-nums;
   }
 
-  /* Select — custom chevron, dark menu */
   select.input-field {
     appearance: none;
     cursor: pointer;
@@ -190,7 +188,6 @@
     color: #e8ecf4;
   }
 
-  /* Date / time — match text inputs; tint calendar icon on WebKit */
   input[type='date'].input-field,
   input[type='datetime-local'].input-field,
   input[type='time'].input-field {
@@ -221,7 +218,6 @@
     @apply flex flex-wrap items-end gap-3;
   }
 
-  /* Toggle chips — severity, cameras, filters */
   .choice-chips {
     @apply flex flex-wrap gap-2;
   }
@@ -264,7 +260,6 @@
     @apply cursor-not-allowed opacity-45;
   }
 
-  /* Segmented control — PDF / Word / Excel, etc. */
   .segment-control {
     @apply flex gap-1 rounded-lg border border-guardian-border-subtle bg-guardian-bg/80 p-1;
   }
@@ -290,7 +285,6 @@
     @apply text-guardian-accent/75;
   }
 
-  /* Radio-style choice chips (face recognition risk) */
   .choice-chip-radio {
     @apply relative cursor-pointer;
   }
@@ -350,7 +344,6 @@
     @apply rounded-lg border border-guardian-border bg-guardian-surface px-4 py-2 text-sm font-medium text-guardian-text transition hover:border-guardian-border hover:bg-guardian-panel-hover active:scale-[0.98];
   }
 
-  /* Sidebar */
   .sidebar-shell {
     @apply relative z-30 flex w-60 shrink-0 flex-col border-r border-guardian-border-subtle bg-guardian-surface transition-[width,transform] duration-300 ease-in-out;
     box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.02);
@@ -550,12 +543,10 @@
     @apply border-emerald-900/40 bg-emerald-950/20 text-emerald-400;
   }
 
-  /* Dashboard */
   .dashboard-incident-banner {
     @apply flex flex-col gap-4 rounded-lg border border-red-900/35 bg-red-950/20 p-4 sm:flex-row sm:items-center;
   }
 
-  /* CCTV feed status (Dashboard) */
   .cctv-feed-grid {
     @apply grid gap-3 sm:grid-cols-3;
   }
@@ -622,7 +613,6 @@
     @apply border-guardian-border-subtle opacity-90;
   }
 
-  /* Camera badge */
   .camera-badge {
     @apply inline-flex items-center rounded border border-guardian-border bg-guardian-elevated px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-guardian-text;
   }
@@ -635,7 +625,6 @@
     @apply text-guardian-accent transition hover:border-guardian-accent/40 hover:bg-guardian-accent/10;
   }
 
-  /* Severity legend */
   .severity-legend {
     @apply flex flex-wrap gap-x-4 gap-y-1;
   }
@@ -652,7 +641,6 @@
     @apply h-1.5 w-1.5 shrink-0 rounded-full;
   }
 
-  /* Incident evidence */
   .incident-evidence {
     @apply rounded-lg border border-guardian-border-subtle bg-guardian-surface/40 p-4;
   }
@@ -969,7 +957,6 @@
     @apply h-3 w-3 animate-spin rounded-full border border-amber-400 border-t-transparent;
   }
 
-  /* Settings sections */
   .settings-session-note {
     @apply rounded-lg border border-amber-900/30 bg-amber-950/15 p-4;
   }
@@ -982,7 +969,6 @@
     @apply mt-1 mb-3 text-xs text-guardian-muted;
   }
 
-  /* Sidebar incident badge */
   .sidebar-nav-badge {
     @apply ml-auto rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white;
   }
@@ -1008,7 +994,6 @@
     border: 1px solid #2a3142 !important;
   }
 
-  /* Page route transition */
   .page-transition {
     animation: page-enter 0.18s ease-out;
   }
@@ -1024,7 +1009,6 @@
     }
   }
 
-  /* Guardian loader */
   .guardian-loader {
     @apply flex flex-col items-center justify-center gap-4 py-16;
   }
@@ -1151,7 +1135,6 @@
     }
   }
 
-  /* Camera wall skeleton */
   .cameras-skeleton-grid {
     @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-2;
   }

@@ -1,7 +1,6 @@
 import { DestroyRef, inject, signal } from '@angular/core'
 import { ApiError } from '../shared/services/api'
 
-/** Shared cache keys so navigation reuses the last API response instantly. */
 export const POLL_KEYS = {
   alerts: 'poll:alerts',
   status: 'poll:status',
@@ -14,10 +13,6 @@ export const POLL_KEYS = {
 
 const pollCache = new Map<string, unknown>()
 
-/**
- * Port of React's usePolling hook. Call from a field initializer (injection context);
- * polling stops automatically when the component is destroyed.
- */
 export function createPoll<T>(fetcher: () => Promise<T>, intervalMs = 3000, cacheKey?: string) {
   const destroyRef = inject(DestroyRef)
   const hasCached = cacheKey ? pollCache.has(cacheKey) : false
@@ -51,7 +46,6 @@ export function createPoll<T>(fetcher: () => Promise<T>, intervalMs = 3000, cach
   let id = window.setInterval(() => void refresh(), currentMs)
   destroyRef.onDestroy(() => window.clearInterval(id))
 
-  /** React's usePolling restarted its timer when intervalMs changed; same here. */
   const setIntervalMs = (ms: number) => {
     if (ms === currentMs) return
     currentMs = ms

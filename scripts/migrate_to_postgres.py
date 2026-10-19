@@ -1,9 +1,3 @@
-"""
-Copy users + pending registrations from the old SQLite file (data/guardian.db) into PostgreSQL,
-and create all tables. Safe to run more than once (existing rows are skipped).
-
-    .venv/bin/python scripts/migrate_to_postgres.py
-"""
 from __future__ import annotations
 
 import os
@@ -15,11 +9,11 @@ ROOT = Path(__file__).resolve().parents[1]
 os.chdir(ROOT)
 sys.path.insert(0, str(ROOT))
 
-from sqlalchemy import create_engine, inspect, select  # noqa: E402
+from sqlalchemy import create_engine, inspect, select
 
-from auth.config import DATABASE_PATH, IS_SQLITE  # noqa: E402
-from auth.database import Base, SessionLocal, init_db  # noqa: E402
-from auth.models import PendingRegistration, User  # noqa: E402
+from auth.config import DATABASE_PATH, IS_SQLITE
+from auth.database import Base, SessionLocal, init_db
+from auth.models import PendingRegistration, User
 
 
 def main() -> None:
@@ -49,14 +43,12 @@ def main() -> None:
                 if db.get(model, row["id"]) is not None:
                     skipped += 1
                     continue
-                # Same email already present (e.g. the test account auto-created by init_db):
-                # the original SQLite account wins, so its password/history are kept.
                 dup = db.execute(select(model).where(model.email == row["email"])).scalar_one_or_none()
                 if dup is not None:
                     db.delete(dup)
                     db.flush()
                 data = {k: v for k, v in row.items() if k in old_cols}
-                for k, v in data.items():  # SQLite stored UTC without tz info
+                for k, v in data.items():
                     if hasattr(v, "tzinfo") and v.tzinfo is None and hasattr(v, "hour"):
                         data[k] = v.replace(tzinfo=timezone.utc)
                 db.add(model(**data))

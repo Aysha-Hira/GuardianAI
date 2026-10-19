@@ -3,7 +3,6 @@ import { Router, RouterLink } from '@angular/router'
 import { AuthService } from '../../core/auth.service'
 import { AuthAlertComponent, AuthDemoBannerComponent } from '../../shared/ui/auth-alert'
 
-/** Port of React's pages/auth/ForgotPassword. */
 @Component({
   selector: 'app-forgot-password',
   imports: [RouterLink, AuthAlertComponent, AuthDemoBannerComponent],

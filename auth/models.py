@@ -1,5 +1,3 @@
-"""SQLAlchemy user model."""
-
 from __future__ import annotations
 
 import uuid
@@ -16,7 +14,6 @@ def _utcnow() -> datetime:
 
 
 class PendingRegistration(Base):
-    """Holds signup data until email is verified — never appears in users until then."""
 
     __tablename__ = "pending_registrations"
 
@@ -51,11 +48,10 @@ class User(Base):
     login_locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     failed_verify_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     verify_locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    # Two-step sign-in (email code). Codes and tickets are stored only as keyed hashes.
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     mfa_code_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     mfa_ticket_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    mfa_purpose: Mapped[str | None] = mapped_column(String(10), nullable=True)  # "login" | "enable"
+    mfa_purpose: Mapped[str | None] = mapped_column(String(10), nullable=True)
     mfa_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     mfa_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     mfa_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

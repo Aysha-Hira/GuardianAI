@@ -21,7 +21,6 @@ export function cardBrandLabel(brand: CardBrand): string {
   return 'Card'
 }
 
-/** Stable pseudo-random brand from BIN (first 4 digits). */
 export function stableRandomCardBrand(digits: string): 'visa' | 'mastercard' {
   const d = digits.replace(/\D/g, '').slice(0, 4)
   if (!d) return 'visa'
@@ -32,7 +31,6 @@ export function stableRandomCardBrand(digits: string): 'visa' | 'mastercard' {
   return hash % 2 === 0 ? 'visa' : 'mastercard'
 }
 
-/** Brand shown in the card-number field while typing. */
 export function resolveInputCardBrand(digits: string): CardBrand {
   const d = digits.replace(/\D/g, '')
   if (!d) return 'unknown'
@@ -42,7 +40,6 @@ export function resolveInputCardBrand(digits: string): CardBrand {
   if (d.length >= 4) return stableRandomCardBrand(d)
   return 'generic'
 }
-/** Detect Visa or Mastercard from partial or full PAN. */
 export function detectCardBrand(digits: string): Exclude<CardBrand, 'generic'> {
   const d = digits.replace(/\D/g, '')
   if (!d) return 'unknown'
@@ -52,7 +49,6 @@ export function detectCardBrand(digits: string): Exclude<CardBrand, 'generic'> {
   return 'unknown'
 }
 
-/** Brand used at checkout completion — matches the input field icon. */
 export function resolveCheckoutCardBrand(digits: string): 'visa' | 'mastercard' {
   const brand = resolveInputCardBrand(digits)
   if (brand === 'visa' || brand === 'mastercard') return brand
@@ -184,7 +180,6 @@ export function mockPaymentStepDelayMs(): number {
   return 1800 + Math.floor(Math.random() * 600)
 }
 
-/** @deprecated Use mockPaymentStepDelayMs per step instead. */
 export function mockPaymentDelayMs(): number {
   return mockPaymentStepDelayMs() * 4
 }

@@ -12,7 +12,6 @@ function feedDetail(camera: CameraChannel): string {
   return 'No recording loaded'
 }
 
-/** Port of React's CctvFeedStatusPanel. */
 @Component({
   selector: 'app-cctv-feed-status-panel',
   imports: [RouterLink, PanelComponent],

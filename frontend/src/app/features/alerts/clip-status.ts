@@ -22,7 +22,6 @@ export function clipStatusLabel(status: IncidentClipStatus | undefined, compact 
   }
 }
 
-/** Port of IncidentClipStatusBadge (renders nothing when there is no label, like React). */
 @Component({
   selector: 'app-clip-status-badge',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -52,7 +51,6 @@ export class ClipStatusBadgeComponent {
   })
 }
 
-/** Port of IncidentClipProcessingPanel. */
 @Component({
   selector: 'app-clip-processing-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,

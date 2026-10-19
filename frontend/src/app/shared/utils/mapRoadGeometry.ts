@@ -2,7 +2,6 @@ import { MAP_ROAD_PATH } from '../data/cctvMapLayout'
 
 type Point = readonly [number, number]
 
-/** Quadratic segments parsed from MAP_ROAD_PATH. */
 const ROAD_SEGMENTS: ReadonlyArray<{ p0: Point; p1: Point; p2: Point }> = (() => {
   const nums = MAP_ROAD_PATH.match(/-?\d+(\.\d+)?/g)?.map(Number) ?? []
   if (nums.length < 8) return []
@@ -37,7 +36,6 @@ function quadTangent(p0: Point, p1: Point, p2: Point, t: number) {
   }
 }
 
-/** Position and heading on the access road, t ∈ [0, 1]. */
 export function pointOnMapRoad(t: number) {
   const clamped = Math.min(1, Math.max(0, t))
   const segCount = ROAD_SEGMENTS.length || 1

@@ -25,7 +25,6 @@ export interface LegalDoc {
   contact: { label: string; email: string }
 }
 
-/** Terms & Privacy reading layout: top bar, contents rail, numbered clauses. */
 @Component({
   selector: 'app-legal-document',
   imports: [RouterLink],
@@ -109,7 +108,6 @@ export class LegalDocumentComponent {
   readonly active = signal<string | null>(null)
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef)
 
-  /** "3. Accounts & security" → { num: "3", heading: "Accounts & security" }. */
   readonly sections = computed(() =>
     this.doc().sections.map((s, i) => {
       const m = /^(\d+)\.\s*(.*)$/.exec(s.title)
@@ -121,7 +119,6 @@ export class LegalDocumentComponent {
   constructor() {
     const destroyRef = inject(DestroyRef)
     afterNextRender(() => {
-      // Highlight the clause occupying the upper part of the viewport.
       const observer = new IntersectionObserver(
         (entries) => {
           const visible = entries.filter((e) => e.isIntersecting)

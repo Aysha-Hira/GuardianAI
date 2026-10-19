@@ -1,10 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core'
 import { evaluatePasswordRules, passwordStrength } from '../utils/passwordValidation'
 
-/**
- * Port of React's PasswordRules. Wrap in @if (password()) like React's `visible` prop.
- * Usage: <div appPasswordRules [password]="password()"></div>
- */
 @Component({
   selector: 'div[appPasswordRules]',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -85,10 +81,6 @@ export class PasswordRulesComponent {
   })
 }
 
-/**
- * Port of React's PasswordMatch. Wrap in @if (confirm()) like React (returns null when empty).
- * Usage: <p appPasswordMatch [password]="password()" [confirm]="confirm()"></p>
- */
 @Component({
   selector: 'p[appPasswordMatch]',
   changeDetection: ChangeDetectionStrategy.OnPush,

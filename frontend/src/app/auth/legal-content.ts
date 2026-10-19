@@ -1,4 +1,3 @@
-// Generated from the React pages/auth/Terms.tsx and Privacy.tsx (same text).
 import type { LegalDoc } from './legal-document'
 
 export const TERMS: LegalDoc = {

@@ -1,9 +1,3 @@
-/**
- * Ports of React's components/common/*. Attribute selectors keep the DOM identical:
- * e.g. React <Panel> rendered <section class="panel …">; here it is <section appPanel>.
- * Slots that React took as ReactNode props are <ng-content>; the caller supplies the wrapper
- * element React used (e.g. PageHeader's action: <div class="shrink-0 pt-1">…</div>).
- */
 import {
   ChangeDetectionStrategy,
   Component,
@@ -21,7 +15,6 @@ import type { AlertStatus } from '../types'
 import { cameraBadgeLabel, parseCameraIdFromAlert } from '../utils/cameraLabels'
 import { IconComponent, type IconName } from './icon'
 
-/** <div appPageHeader heading="…" description="…" eyebrow="…"><div class="shrink-0 pt-1">action</div></div> */
 @Component({
   selector: 'div[appPageHeader]',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,7 +38,6 @@ export class PageHeaderComponent {
   readonly eyebrow = input<string>()
 }
 
-/** <section appPanel heading="…" subtitle="…" [noPadding]="true"> … <x panelAction>…</x></section> */
 @Component({
   selector: 'section[appPanel]',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -193,7 +185,6 @@ const LEGEND_ITEMS = [
   { key: 'low', label: 'Low', fill: '#34d399' },
 ] as const
 
-/** <div appSeverityLegend [compact]="true" class="mt-2 justify-center"></div> */
 @Component({
   selector: 'div[appSeverityLegend]',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -244,7 +235,6 @@ export class StatusBadgeComponent {
   protected readonly statusClass = STATUS_CLASS
 }
 
-/** Port of React's CameraBadge (renders a link or a span, like React). */
 @Component({
   selector: 'app-camera-badge',
   imports: [RouterLink],
@@ -279,7 +269,6 @@ export class CameraBadgeComponent {
   protected readonly cls = computed(() => `camera-badge ${this.compact() ? 'camera-badge-compact' : ''}`)
 }
 
-/** Port of React's LoadingState. <div appLoadingState [compact]="true"></div> */
 @Component({
   selector: 'div[appLoadingState]',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -318,10 +307,6 @@ export class LoadingStateComponent {
   )
 }
 
-/**
- * Moves the element to <body> (React's createPortal), so position:fixed overlays are not
- * trapped by the transformed .page-transition ancestor.
- */
 @Directive({ selector: '[appPortalToBody]' })
 export class PortalToBodyDirective {
   constructor() {
@@ -331,7 +316,6 @@ export class PortalToBodyDirective {
   }
 }
 
-/** Port of Settings' ToggleSwitch. <label appToggle label="…" description="…" [checked]="x" (checkedChange)="…"></label> */
 @Component({
   selector: 'label[appToggle]',
   changeDetection: ChangeDetectionStrategy.OnPush,

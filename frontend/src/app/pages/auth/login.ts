@@ -13,7 +13,6 @@ import { AuthService } from '../../core/auth.service'
 import type { MfaChallenge } from '../../shared/types/auth'
 import { AuthAlertComponent, AuthDemoBannerComponent } from '../../shared/ui/auth-alert'
 
-/** Port of React's pages/auth/Login. */
 @Component({
   selector: 'app-login',
   imports: [RouterLink, AuthAlertComponent, AuthDemoBannerComponent],
@@ -150,7 +149,6 @@ import { AuthAlertComponent, AuthDemoBannerComponent } from '../../shared/ui/aut
 export class LoginPage {
   private readonly auth = inject(AuthService)
   private readonly router = inject(Router)
-  // Where the guard sent us from (React: location.state.from)
   private readonly from: string = (history.state as { from?: string } | null)?.from ?? '/'
 
   protected readonly email = signal('')
@@ -159,7 +157,6 @@ export class LoginPage {
   protected readonly error = signal('')
   protected readonly loading = signal(false)
 
-  // Two-step sign-in (emailed code)
   protected readonly challenge = signal<MfaChallenge | null>(null)
   protected readonly digits = signal<string[]>(Array(6).fill(''))
   protected readonly code = computed(() => this.digits().join(''))
@@ -192,7 +189,6 @@ export class LoginPage {
       this.error.set(err instanceof Error ? err.message : 'That code did not work.')
       this.digits.set(Array(6).fill(''))
       if (status === 401 || status === 429) {
-        // Ticket expired or too many attempts: back to the password step.
         this.challenge.set(null)
       } else {
         this.focus(0)

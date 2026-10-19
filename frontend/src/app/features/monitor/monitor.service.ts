@@ -55,11 +55,6 @@ interface ZoneDrag {
   draft: ZoneRect | null
 }
 
-/**
- * Port of React's MonitorContext/MonitorProvider. Provided by the Monitoring page component,
- * so it lives exactly as long as the page (like the React provider).
- * DOM elements (video img, viewport, camera box, zone canvas) are registered by CameraView.
- */
 @Injectable()
 export class MonitorService {
   private readonly route = inject(ActivatedRoute)
@@ -109,7 +104,6 @@ export class MonitorService {
   readonly isRecording = computed(() => Boolean(this.status()?.manual_recording))
   readonly recordingDuration = computed(() => this.status()?.manual_duration_sec ?? 0)
 
-  // DOM elements registered by CameraView (React refs)
   videoEl: HTMLImageElement | null = null
   viewportEl: HTMLDivElement | null = null
   cameraEl: HTMLDivElement | null = null
@@ -157,13 +151,11 @@ export class MonitorService {
       if (this.zoneBannerTimer) window.clearTimeout(this.zoneBannerTimer)
     })
 
-    // Reload the alerts list whenever the filter changes (React: useEffect on alertsFilter).
     effect(() => {
       this.alertsFilter()
       untracked(() => void this.refreshAlertsList())
     })
 
-    // Keep pan within bounds when zoom changes.
     effect(() => {
       const x = this.panX()
       const y = this.panY()
@@ -175,11 +167,9 @@ export class MonitorService {
       })
     })
 
-    // ?camera=N and ?focus=ALERT deep links (from the dashboard, incidents, map…).
     this.route.queryParamMap.subscribe((params) => void this.handleDeepLink(params.get('camera'), params.get('focus')))
   }
 
-  // ------------------------------------------------------------------ helpers
   flash(msg: string, ms = 3000) {
     const id = ++this.toastId
     this.toasts.update((prev) => [...prev, { id, message: msg }])
@@ -237,7 +227,6 @@ export class MonitorService {
     }
   }
 
-  // ------------------------------------------------------------------ polling
   async refreshFrame() {
     if (this.frameInflight || document.hidden) return
     this.frameInflight = true
@@ -250,7 +239,6 @@ export class MonitorService {
         this.frameGen.update((g) => g + 1)
       })
     } catch {
-      /* ignore */
     } finally {
       this.frameInflight = false
     }
@@ -273,7 +261,6 @@ export class MonitorService {
       if (!this.showVideoSetup() && !this.uploading) this.viewCameraId.set(data.camera_id ?? 1)
       if (data.incident_focus) this.focus.set(data.incident_focus)
     } catch {
-      /* ignore */
     }
   }
 
@@ -289,7 +276,6 @@ export class MonitorService {
     try {
       this.focus.set(await api.getFocusStatus())
     } catch {
-      /* ignore */
     }
   }
 
@@ -300,7 +286,6 @@ export class MonitorService {
       this.alerts.set(data.alerts)
       this.alertsNewCount.set(data.new_count)
     } catch {
-      /* ignore */
     }
   }
 
@@ -338,7 +323,6 @@ export class MonitorService {
       await this.refreshFocus()
       await this.refreshAlertsList()
     } catch {
-      /* ignore */
     }
   }
 
@@ -377,7 +361,6 @@ export class MonitorService {
     }
   }
 
-  // ------------------------------------------------------------------ view (zoom / pan)
   resetView() {
     this.zoomIndex.set(0)
     this.panX.set(0)
@@ -438,7 +421,6 @@ export class MonitorService {
     this.viewportEl?.releasePointerCapture(e.pointerId)
   }
 
-  // ------------------------------------------------------------------ cameras
   private async switchTo(cameraId: number) {
     this.switching = true
     try {
@@ -478,13 +460,11 @@ export class MonitorService {
     await this.switchTo(cameraId)
   }
 
-  // ------------------------------------------------------------------ zones
   private async cancelZoneEditInternal() {
     if (this.zoneSnapshot) {
       try {
         await api.setZones(this.zoneSnapshot, true)
       } catch {
-        /* ignore */
       }
     }
     this.editZones.set([])
@@ -619,7 +599,6 @@ export class MonitorService {
       try {
         await api.setZones([...before, added], true)
       } catch {
-        /* ignore */
       }
     }
     this.zoneDrag = { mode: null, index: -1, startNorm: null, origin: null, draft: null }
@@ -627,7 +606,6 @@ export class MonitorService {
     this.drawCanvas()
   }
 
-  // ------------------------------------------------------------------ actions
   async takeSnapshot() {
     this.flash('Saving…', 10000)
     try {
@@ -730,7 +708,6 @@ export class MonitorService {
       await api.releaseFocus(slot)
       await this.refreshFocus()
     } catch {
-      /* ignore */
     }
   }
 
@@ -818,7 +795,6 @@ export class MonitorService {
     try {
       this.selectedAlert.set(await api.getAlert(id))
     } catch {
-      /* ignore */
     }
   }
 

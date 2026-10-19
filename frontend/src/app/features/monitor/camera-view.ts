@@ -24,7 +24,6 @@ function monitorCameraLabel(viewCameraId: number, showVideoSetup: boolean, camer
   return `CCTV 0${viewCameraId}`
 }
 
-/** Port of React's monitor/CameraView. */
 @Component({
   selector: 'app-camera-view',
   imports: [VideoUploadControlComponent],
@@ -351,7 +350,6 @@ export class CameraViewComponent {
   protected readonly m = inject(MonitorService)
   private readonly subs = inject(SubscriptionService)
   private readonly router = inject(Router)
-  /** Recording is a paid feature (the server enforces this too). */
   protected readonly canRecord = computed(() => this.subs.current()?.recording !== false)
 
   protected upgradeForRecording() {
@@ -396,14 +394,12 @@ export class CameraViewComponent {
   })
 
   constructor() {
-    // Register DOM elements with the service (React passed refs through context).
     effect(() => {
       this.m.videoEl = this.videoImg()?.nativeElement ?? null
       this.m.viewportEl = this.viewport()?.nativeElement ?? null
       this.m.cameraEl = this.cameraBox()?.nativeElement ?? null
       this.m.canvasEl = this.zoneCanvas()?.nativeElement ?? null
     })
-    // Redraw zones when anything they depend on changes (React: useEffect on drawCanvas deps).
     effect(() => {
       this.zoneCanvas()
       this.m.editZones()
@@ -414,11 +410,9 @@ export class CameraViewComponent {
       this.m.frameGen()
       this.m.drawCanvas()
     })
-    // Entering zone edit always shows the HUD.
     effect(() => {
       if (this.m.zoneEditMode()) this.overlayVisible.set(true)
     })
-    // "H" toggles the HUD.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'h' && e.key !== 'H') return
       const tag = (e.target as HTMLElement)?.tagName

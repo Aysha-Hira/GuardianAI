@@ -14,8 +14,6 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
-    // Ask the backend who is logged in (via the HttpOnly cookie) before the first route renders.
-    // The loader inside <app-root> in index.html is shown meanwhile, like React's LoadingState.
     provideAppInitializer(() => inject(AuthService).bootstrap()),
   ],
 }

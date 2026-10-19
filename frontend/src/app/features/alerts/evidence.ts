@@ -4,7 +4,6 @@ import type { Alert } from '../../shared/types'
 import { PortalToBodyDirective } from '../../shared/ui/common'
 import { ClipProcessingPanelComponent, ClipStatusBadgeComponent, clipIsPending, clipStatusLabel } from './clip-status'
 
-/** Port of EvidenceLightbox (portalled to <body>, Escape closes, body scroll locked). */
 @Component({
   selector: 'app-evidence-lightbox',
   imports: [PortalToBodyDirective],
@@ -48,7 +47,6 @@ interface LightboxState {
   caption: string
 }
 
-/** Port of IncidentEvidencePanel. */
 @Component({
   selector: 'app-incident-evidence-panel',
   imports: [ClipStatusBadgeComponent, ClipProcessingPanelComponent, EvidenceLightboxComponent],
@@ -172,7 +170,6 @@ export class IncidentEvidencePanelComponent {
   protected readonly pendingLabel = computed(() => clipStatusLabel(this.alert().incident_clip_status))
 }
 
-/** Port of IncidentEvidenceThumb (table rows — prefers focus, then full scene). */
 @Component({
   selector: 'app-incident-evidence-thumb',
   changeDetection: ChangeDetectionStrategy.OnPush,

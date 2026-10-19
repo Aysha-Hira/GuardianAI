@@ -3,7 +3,6 @@ import { EchartDirective, type ChartOption } from '../../shared/charts/echart'
 import type { Alert } from '../../shared/types'
 import { groupAlertsByHour, groupAlertsBySeverity, groupAlertsByType } from '../../shared/utils/chartData'
 
-/** Light-theme styling used only for the off-screen charts captured into exports. */
 const AXIS = { color: '#64748b', fontSize: 11 }
 const GRID = { lineStyle: { color: '#e2e8f0', type: [2, 4] as number[] } }
 const TOOLTIP = {
@@ -26,7 +25,6 @@ function cartesian(labels: string[], series: Record<string, unknown>): ChartOpti
   }
 }
 
-/** Port of React's components/reports/ReportChartCapture (hidden charts for PDF/DOCX/XLSX). */
 @Component({
   selector: 'app-report-chart-capture',
   imports: [EchartDirective],

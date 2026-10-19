@@ -18,7 +18,6 @@ import { assignBlobToImage } from '../../shared/utils/blobUrl'
 import { EvidenceLightboxComponent } from '../alerts/evidence'
 import { MonitorService } from './monitor.service'
 
-/** Port of VideoUploadControl. */
 @Component({
   selector: 'app-video-upload-control',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,7 +48,6 @@ export class VideoUploadControlComponent {
   }
 }
 
-/** Port of FocusFrameImage — polls the focus frame for one slot every 150 ms. */
 @Component({
   selector: 'app-focus-frame-image',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,7 +88,6 @@ export class FocusFrameImageComponent {
             if (gen === generation) this.ready.set(true)
           })
         } catch {
-          /* ignore */
         } finally {
           inflight = false
         }
@@ -107,7 +104,6 @@ export class FocusFrameImageComponent {
   }
 }
 
-/** Port of IncidentFocusPanel. */
 @Component({
   selector: 'app-incident-focus-panel',
   imports: [FocusFrameImageComponent],
@@ -167,7 +163,6 @@ const FILTERS: { id: AlertFilter; label: string }[] = [
   { id: 'resolved', label: 'RESOLVED' },
 ]
 
-/** Port of MonitorAlertsPanel. */
 @Component({
   selector: 'app-monitor-alerts-panel',
   imports: [SeverityLegendComponent],
@@ -229,7 +224,6 @@ export class MonitorAlertsPanelComponent {
   protected readonly filters = FILTERS
 }
 
-/** Port of MonitorToast. */
 @Component({
   selector: 'app-monitor-toast',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -272,7 +266,6 @@ const MODAL_ACTIONS: Partial<Record<AlertStatus, { status: AlertStatus; label: s
   ],
 }
 
-/** Port of AlertDetailModal. */
 @Component({
   selector: 'app-alert-detail-modal',
   imports: [EvidenceLightboxComponent],

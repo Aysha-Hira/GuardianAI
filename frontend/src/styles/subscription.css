@@ -174,7 +174,6 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Checkout */
 .subscription-checkout-layout {
   display: grid;
   gap: 1.5rem;
@@ -417,7 +416,6 @@
   margin-top: 1.25rem;
 }
 
-/* Secure checkout strip */
 .sub-secure-strip {
   display: flex;
   flex-wrap: wrap;
@@ -476,7 +474,6 @@
   border: 1px solid rgba(52, 211, 153, 0.2);
 }
 
-/* Card brand marks */
 .sub-card-brand {
   display: inline-flex;
   align-items: center;
@@ -880,7 +877,6 @@
   gap: 0.45rem;
 }
 
-/* Confirmation */
 .subscription-confirm-page {
   position: relative;
 }
@@ -1175,7 +1171,6 @@
   color: #e8ecf4;
 }
 
-/* The signed-in user's current plan (saved on the server). */
 .subscription-plan-card.is-current {
   border-color: rgba(96, 165, 250, 0.55);
   box-shadow:

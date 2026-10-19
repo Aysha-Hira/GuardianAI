@@ -30,7 +30,6 @@ const VIDEO_TABS: [VideoMode, string][] = [
   ['side_by_side', 'Side by side'],
 ]
 
-/** Port of React's pages/MultiCamReId. */
 @Component({
   selector: 'app-multicam-reid',
   imports: [ErrorStateComponent, PageHeaderComponent, PanelComponent, StatCardComponent],
@@ -256,7 +255,6 @@ export class MultiCamReIdPage {
     this.message.set(null)
     this.running.set(true)
     try {
-      // Settings are fixed to the tuned defaults (full video, full quality, server-side threshold).
       await api.runMulticamExperiment({ sequential: true, side_by_side: true, fast_mode: false })
       this.message.set('Run started. Results appear here in about 4 minutes.')
       await this.poll.refresh()

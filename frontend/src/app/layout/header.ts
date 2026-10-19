@@ -41,7 +41,6 @@ function formatDate(date: Date): string {
   return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-/** Port of React's Header. */
 @Component({
   selector: 'app-header',
   imports: [RouterLink, IconComponent, SeverityBadgeComponent],
@@ -250,7 +249,6 @@ export class HeaderComponent {
     })
   }
 
-  /** Close dropdowns on a click outside them (React used a mousedown listener too). */
   @HostListener('document:mousedown', ['$event'])
   protected onDocumentMouseDown(event: MouseEvent) {
     const target = event.target as Node

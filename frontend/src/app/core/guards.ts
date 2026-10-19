@@ -2,7 +2,6 @@ import { inject } from '@angular/core'
 import { type CanActivateFn, RedirectCommand, Router } from '@angular/router'
 import { AuthService } from './auth.service'
 
-/** Port of React's ProtectedRoute. */
 export const protectedGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService)
   const router = inject(Router)
@@ -15,7 +14,6 @@ export const protectedGuard: CanActivateFn = (_route, state) => {
   return new RedirectCommand(target, { replaceUrl: true, state: { from: state.url } })
 }
 
-/** Port of React's GuestRoute (login, signup, forgot/reset password). */
 export const guestGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService)
   const router = inject(Router)
@@ -41,7 +39,6 @@ export const guestGuard: CanActivateFn = (_route, state) => {
   return true
 }
 
-/** Port of React's VerifyEmailRoute. */
 export const verifyEmailGuard: CanActivateFn = (route) => {
   const auth = inject(AuthService)
   const router = inject(Router)

@@ -50,7 +50,6 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ]
 
-/** Port of React's Sidebar. */
 @Component({
   selector: 'app-sidebar',
   imports: [RouterLink, IconComponent],
