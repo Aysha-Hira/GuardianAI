@@ -1,0 +1,2021 @@
+/* CCTV Site Map — immersive digital twin */
+
+.cctv-map-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: calc(100vh - 6.5rem);
+  margin: -1.5rem;
+  padding: 0.25rem 0.5rem 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .cctv-map-page {
+    margin: -2rem;
+    padding: 0.25rem 0.75rem 0.75rem;
+  }
+}
+
+/* Command bar */
+.cctv-map-command {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.875rem;
+  background: linear-gradient(135deg, rgba(19, 24, 32, 0.95) 0%, rgba(12, 16, 24, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+}
+
+.cctv-map-command-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.cctv-map-command-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: linear-gradient(145deg, rgba(34, 211, 238, 0.15), rgba(52, 211, 153, 0.08));
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  color: #22d3ee;
+}
+
+.cctv-map-command-icon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.cctv-map-command-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.cctv-map-command-sub {
+  font-size: 0.6875rem;
+  color: rgba(148, 163, 184, 0.9);
+  margin-top: 0.1rem;
+}
+
+.cctv-map-command-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cctv-map-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.cctv-map-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
+  animation: cctv-chip-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cctv-chip-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.cctv-map-chip--live {
+  background: rgba(52, 211, 153, 0.1);
+  border-color: rgba(52, 211, 153, 0.25);
+  color: #6ee7b7;
+}
+
+.cctv-map-chip--clear {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+}
+
+.cctv-map-chip--alert {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.cctv-map-command-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cctv-map-action-btn {
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  background: linear-gradient(145deg, rgba(52, 211, 153, 0.2), rgba(52, 211, 153, 0.08));
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: #6ee7b7;
+}
+
+.cctv-map-action-btn:hover {
+  background: rgba(52, 211, 153, 0.25);
+  color: #fff;
+}
+
+.cctv-map-action-btn--ghost {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(203, 213, 225, 0.9);
+}
+
+.cctv-map-action-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.cctv-map-layout {
+  display: grid;
+  grid-template-columns: 272px 1fr;
+  gap: 0.625rem;
+  flex: 1;
+  min-height: 520px;
+}
+
+.cctv-map-layout.has-detail {
+  grid-template-columns: 272px 1fr 292px;
+}
+
+@media (max-width: 1200px) {
+  .cctv-map-page {
+    margin: -1.5rem;
+  }
+
+  .cctv-map-layout,
+  .cctv-map-layout.has-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .cctv-map-locations {
+    max-height: 240px;
+  }
+
+  .cctv-map-camera-panel {
+    order: 3;
+  }
+}
+
+/* Location tree (left) — glass panel */
+.cctv-map-locations {
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.875rem;
+  background: linear-gradient(180deg, rgba(16, 22, 32, 0.92) 0%, rgba(10, 14, 22, 0.96) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+
+.cctv-map-locations-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1rem 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cctv-map-locations-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(34, 211, 238, 0.75);
+}
+
+.cctv-map-locations-alert-pill {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.cctv-map-locations-clear-pill {
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.12);
+  color: #34d399;
+}
+
+.cctv-map-tree {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.cctv-map-tree-group + .cctv-map-tree-group {
+  margin-top: 0.25rem;
+}
+
+.cctv-map-tree-area {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.625rem 0.5rem;
+  border: none;
+  border-radius: 0.625rem;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.cctv-map-tree-area:hover,
+.cctv-map-tree-area.is-expanded {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cctv-map-tree-area.is-expanded {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.cctv-map-tree-area.is-selected {
+  background: color-mix(in srgb, var(--area-accent, #34d399) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--area-accent, #34d399) 28%, transparent);
+}
+
+.cctv-map-tree-area.has-alert {
+  background: rgba(239, 68, 68, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.15);
+}
+
+.cctv-map-tree-area-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cctv-map-tree-area-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cctv-map-tree-area-sub {
+  font-size: 0.6875rem;
+  color: var(--color-guardian-muted, #8b95a8);
+  margin-top: 0.1rem;
+}
+
+.cctv-map-tree-alert-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+}
+
+.cctv-map-tree-down-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.18);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.cctv-map-tree-area.has-down {
+  border-color: rgba(249, 115, 22, 0.28);
+}
+
+.cctv-map-tree-cam-count {
+  font-size: 0.625rem;
+  color: var(--color-guardian-muted, #8b95a8);
+}
+
+.cctv-map-tree-chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--color-guardian-muted, #8b95a8);
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.cctv-map-tree-chevron.is-open {
+  transform: rotate(90deg);
+}
+
+.cctv-map-tree-zones {
+  list-style: none;
+  margin: 0.25rem 0 0.5rem 1.25rem;
+  padding: 0;
+  border-left: 1px solid var(--color-guardian-border-subtle, #1e2430);
+}
+
+.cctv-map-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem 0.4rem 0.75rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--color-guardian-muted, #8b95a8);
+  font-size: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cctv-map-tree-item.is-selected {
+  background: color-mix(in srgb, var(--area-accent, #34d399) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--area-accent, #34d399) 30%, transparent);
+  color: #fff;
+}
+
+.cctv-map-tree-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+
+.cctv-map-tree-item.is-active,
+.cctv-map-tree-item.is-critical {
+  color: #fca5a5;
+}
+
+.cctv-map-tree-item-icon {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.cctv-map-tree-yolo-tag {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  margin-left: auto;
+}
+
+.cctv-map-tree-item-alert {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  margin-left: auto;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+}
+
+.cctv-map-locations-footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.cctv-map-locations-link {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(34, 211, 238, 0.8);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.cctv-map-locations-link:hover {
+  text-decoration: underline;
+}
+
+/* Main map viewport */
+.cctv-map-main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.875rem;
+  background: #040608;
+  overflow: hidden;
+  min-height: 540px;
+  border: 1px solid rgba(34, 211, 238, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5) inset,
+    0 12px 48px rgba(0, 0, 0, 0.45),
+    0 0 60px rgba(34, 211, 238, 0.04);
+}
+
+.cctv-map-main::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0%, rgba(34, 211, 238, 0.06) 0%, transparent 55%);
+  z-index: 1;
+}
+
+.cctv-map-main-toolbar {
+  display: none;
+}
+
+/* Digital twin viewport */
+.cctv-map-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 540px;
+  overflow: hidden;
+  background: #040608;
+  z-index: 0;
+}
+
+.cctv-map-canvas-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.5) 0%, transparent 50%);
+  z-index: 2;
+}
+
+.cctv-map-scene {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.35s ease;
+  touch-action: none;
+  user-select: none;
+}
+
+.cctv-map-scene.is-3d {
+  cursor: grab;
+}
+
+.cctv-map-scene.is-3d.is-dragging {
+  cursor: grabbing;
+}
+
+.cctv-map-turntable {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cctv-map-scene-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  transform: scale(var(--map-zoom, 1));
+  transform-origin: 50% 50%;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cctv-map-scene.is-3d.is-dragging .cctv-map-scene-inner {
+  transition: none;
+}
+
+.cctv-map-rotate-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 4.5rem;
+  z-index: 4;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 10, 15, 0.72);
+  color: rgba(232, 236, 244, 0.72);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.cctv-map-svg {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  display: block;
+}
+
+/* 3D structures — dark monochrome */
+.cctv-structure-wall--dark { fill: #1a2230; stroke: rgba(255,255,255,0.03); stroke-width: 0.5; }
+.cctv-structure-wall--mid { fill: #222c3c; stroke: rgba(255,255,255,0.04); stroke-width: 0.5; }
+.cctv-structure-wall--light { fill: #2a3548; stroke: rgba(255,255,255,0.05); stroke-width: 0.5; }
+.cctv-structure-base { fill: rgba(0,0,0,0.25); }
+.cctv-structure-roof { fill: #2f3a4d; stroke: rgba(255,255,255,0.06); stroke-width: 0.5; }
+.cctv-structure-highlight {
+  filter: drop-shadow(0 0 10px rgba(34,211,238,0.65));
+  animation: cctv-wire-pulse 2.5s ease-in-out infinite;
+}
+@keyframes cctv-wire-pulse {
+  0%, 100% { stroke-opacity: 1; }
+  50% { stroke-opacity: 0.45; }
+}
+
+/* Entrance gates — barrier + fence, not building masses */
+.cctv-scene-gate-lane {
+  fill: rgba(24, 30, 40, 0.85);
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 0.5;
+}
+
+.cctv-scene-gate-fence {
+  stroke: #3d4a5c;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.cctv-scene-gate-fence-post {
+  stroke: #2a3548;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.cctv-scene-gate-post-front {
+  fill: #2a3548;
+  stroke: rgba(255, 255, 255, 0.05);
+  stroke-width: 0.5;
+}
+
+.cctv-scene-gate-post-face {
+  fill: #1e2838;
+}
+
+.cctv-scene-gate-post-side {
+  fill: #222c3c;
+}
+
+.cctv-scene-gate-cap {
+  fill: #3d4a5c;
+}
+
+.cctv-scene-gate-arm {
+  fill: #475569;
+}
+
+.cctv-scene-gate-arm-mark {
+  fill: #f97316;
+  opacity: 0.85;
+}
+
+.cctv-scene-gate-arm-mark-alt {
+  fill: #1e293b;
+  opacity: 0.9;
+}
+
+.cctv-scene-gate-highlight {
+  filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.65));
+  animation: cctv-wire-pulse 2.5s ease-in-out infinite;
+}
+
+.cctv-scene-tree { pointer-events: none; }
+
+.cctv-scene-vehicle-g { pointer-events: none; }
+
+.cctv-scene-vehicle-body {
+  fill: #ef4444;
+  stroke: #fca5a5;
+  stroke-width: 0.75;
+}
+
+.cctv-scene-vehicle-cabin {
+  fill: #dc2626;
+}
+
+.cctv-scene-vehicle-wheel {
+  fill: #1e293b;
+  stroke: #475569;
+  stroke-width: 0.5;
+}
+
+.cctv-scene-paths { pointer-events: none; }
+.cctv-scene-anchor {
+  fill: rgba(34,211,238,0.08);
+  stroke: rgba(34,211,238,0.2);
+  stroke-width: 1;
+  pointer-events: none;
+}
+.cctv-scene-anchor.is-active {
+  fill: rgba(34,211,238,0.15);
+  stroke: rgba(34,211,238,0.45);
+}
+
+/* Site markers — pin + tag (reference style) */
+.cctv-map-markers-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cctv-site-marker {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: auto;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+  transition: z-index 0s;
+}
+
+.cctv-site-marker:hover,
+.cctv-site-marker.is-selected {
+  z-index: 10;
+}
+
+/** Compact marker for tight map spots (north gate). */
+.cctv-site-marker--compact {
+  transform: translate(-50%, -100%) scale(0.82);
+}
+
+.cctv-site-marker--compact .cctv-site-tag-title {
+  font-size: 0.6875rem;
+}
+
+.cctv-site-marker--compact .cctv-site-tag-meta,
+.cctv-site-marker--compact .cctv-site-tag-incident {
+  font-size: 0.5625rem;
+}
+
+.cctv-site-marker--compact .cctv-site-pin-body {
+  width: 26px;
+  height: 26px;
+}
+
+.cctv-site-marker--compact .cctv-site-pin-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.cctv-site-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+  margin-bottom: 0.35rem;
+  border-radius: 0.45rem;
+  background: rgba(8, 12, 20, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 20px color-mix(in srgb, var(--marker-color) 18%, transparent);
+  backdrop-filter: blur(14px);
+  white-space: nowrap;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.cctv-site-marker.is-selected .cctv-site-tag {
+  border-color: color-mix(in srgb, var(--marker-color) 55%, transparent);
+  box-shadow:
+    0 10px 36px rgba(0, 0, 0, 0.6),
+    0 0 28px color-mix(in srgb, var(--marker-color) 35%, transparent);
+}
+
+.cctv-site-marker.is-alert .cctv-site-tag {
+  border-color: rgba(239, 68, 68, 0.45);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.15);
+}
+
+.cctv-site-marker.is-down .cctv-site-tag {
+  border-color: rgba(249, 115, 22, 0.5);
+  box-shadow: 0 8px 32px rgba(249, 115, 22, 0.18);
+}
+
+.cctv-site-tag-down {
+  color: #fb923c;
+}
+
+.cctv-site-tag-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--marker-color) 85%, #0a0e16);
+  color: #f8fafc;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--marker-color) 40%, transparent);
+}
+
+.cctv-area-icon-svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+}
+
+.cctv-map-tree-area-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+  flex-shrink: 0;
+  color: #f8fafc;
+  box-shadow: 0 0 12px color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.cctv-map-tree-area-icon .cctv-area-icon-svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.cctv-site-tag-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.cctv-site-tag-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+
+.cctv-site-tag-meta {
+  font-size: 0.625rem;
+  color: rgba(148, 163, 184, 0.95);
+  margin-top: 0.05rem;
+}
+
+.cctv-site-tag-incident {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: #f87171;
+  margin-top: 0.1rem;
+}
+
+.cctv-site-tag-warn {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.25rem;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.15rem;
+}
+
+.cctv-site-connector {
+  width: 1px;
+  height: 18px;
+  background: linear-gradient(to bottom, rgba(148,163,184,0.5), rgba(148,163,184,0.1));
+  margin-bottom: 2px;
+}
+
+.cctv-site-pin {
+  position: relative;
+  width: 36px;
+  height: 44px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.cctv-site-pin-ring {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(34, 211, 238, 0.25);
+  filter: blur(2px);
+}
+
+.cctv-site-marker.is-live .cctv-site-pin-ring {
+  background: rgba(34, 197, 94, 0.35);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+}
+
+.cctv-site-marker.is-alert .cctv-site-pin-ring {
+  background: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
+}
+
+.cctv-site-pin-body {
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #34d399, #059669);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 16px rgba(52, 211, 153, 0.45);
+  margin-bottom: 4px;
+}
+
+.cctv-site-marker.is-offline .cctv-site-pin-body {
+  background: linear-gradient(145deg, #475569, #334155);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.cctv-site-marker.is-alert .cctv-site-pin-body {
+  background: linear-gradient(145deg, #f87171, #dc2626);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.55);
+}
+
+.cctv-site-marker.is-down .cctv-site-pin-ring {
+  background: rgba(249, 115, 22, 0.35);
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.45);
+}
+
+.cctv-site-marker.is-down .cctv-site-pin-body {
+  background: linear-gradient(145deg, #fb923c, #ea580c);
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.5);
+}
+
+.cctv-site-marker.is-selected .cctv-site-pin-body {
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.6), 0 4px 16px rgba(52, 211, 153, 0.45);
+}
+
+.cctv-site-marker.is-live .cctv-site-pin-body {
+  animation: cctv-pin-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes cctv-pin-glow {
+  0%, 100% { box-shadow: 0 4px 16px rgba(52, 211, 153, 0.45); }
+  50% { box-shadow: 0 4px 24px rgba(52, 211, 153, 0.75), 0 0 20px rgba(52, 211, 153, 0.35); }
+}
+
+.cctv-scene-path-line {
+  animation: cctv-path-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes cctv-path-shimmer {
+  0%, 100% { stroke-opacity: 0.75; }
+  50% { stroke-opacity: 1; }
+}
+
+.cctv-site-pin-icon {
+  width: 16px;
+  height: 16px;
+  transform: rotate(45deg);
+  color: #fff;
+}
+
+.cctv-site-alert-pulse {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(239, 68, 68, 0.65);
+  animation: cctv-alert-ring 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes cctv-alert-ring {
+  0% { transform: translateX(-50%) scale(0.55); opacity: 0.9; }
+  100% { transform: translateX(-50%) scale(1.4); opacity: 0; }
+}
+
+/* Canvas HUD overlays */
+.cctv-map-hud {
+  position: absolute;
+  inset: 12px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.cctv-map-hud-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: rgba(34, 211, 238, 0.35);
+  border-style: solid;
+  border-width: 0;
+}
+
+.cctv-map-hud-corner--tl {
+  top: 0;
+  left: 0;
+  border-top-width: 2px;
+  border-left-width: 2px;
+  border-top-left-radius: 4px;
+}
+
+.cctv-map-hud-corner--tr {
+  top: 0;
+  right: 0;
+  border-top-width: 2px;
+  border-right-width: 2px;
+  border-top-right-radius: 4px;
+}
+
+.cctv-map-hud-corner--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+  border-bottom-left-radius: 4px;
+}
+
+.cctv-map-hud-corner--br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+  border-bottom-right-radius: 4px;
+}
+
+.cctv-map-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.035;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.15) 2px,
+    rgba(255, 255, 255, 0.15) 4px
+  );
+}
+
+.cctv-map-coords {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  z-index: 6;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.5625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(34, 211, 238, 0.55);
+  pointer-events: none;
+}
+.cctv-map-scale {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+}
+
+.cctv-map-scale-bar {
+  width: 72px;
+  height: 3px;
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 1px;
+}
+
+.cctv-map-scale-label {
+  font-size: 0.625rem;
+  color: rgba(148, 163, 184, 0.8);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.cctv-map-view-controls {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border-radius: 0.75rem;
+  background: rgba(8, 12, 20, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  z-index: 6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.cctv-map-view-mode {
+  display: flex;
+  padding: 2px;
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cctv-map-view-btn {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cctv-map-view-btn:hover,
+.cctv-map-view-btn.is-active {
+  background: rgba(34, 211, 238, 0.15);
+  color: #22d3ee;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.15);
+}
+
+.cctv-map-zoom-group {
+  display: flex;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  margin-left: 0.15rem;
+  padding-left: 0.15rem;
+}
+
+.cctv-map-zoom-readout {
+  font-size: 0.5625rem;
+  font-family: 'IBM Plex Mono', monospace;
+  color: rgba(148, 163, 184, 0.7);
+  min-width: 2rem;
+  text-align: center;
+}
+
+/* Location detail panel (no live video) */
+.cctv-map-location-hero {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 1rem;
+  padding: 0.875rem;
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--hero-color) 12%, rgba(10, 14, 22, 0.9));
+  border: 1px solid color-mix(in srgb, var(--hero-color) 35%, transparent);
+  position: relative;
+}
+
+.cctv-map-location-hero-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.cctv-map-location-hero-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cctv-map-location-hero-sub {
+  font-size: 0.6875rem;
+  color: var(--color-guardian-muted, #8b95a8);
+  margin-top: 0.1rem;
+}
+
+.cctv-map-location-hero .cctv-map-camera-status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.cctv-map-zone-list {
+  padding: 0.875rem 1rem 0;
+}
+
+.cctv-map-zone-list-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-guardian-muted, #8b95a8);
+  margin-bottom: 0.4rem;
+}
+
+.cctv-map-zone-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cctv-map-zone-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(203, 213, 225, 0.9);
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.cctv-map-zone {
+  fill: rgba(52, 211, 153, 0.07);
+  stroke: rgba(52, 211, 153, 0.28);
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: fill 0.2s, stroke 0.2s, filter 0.2s;
+}
+
+.cctv-map-zone--road {
+  fill: rgba(52, 211, 153, 0.05);
+  stroke: rgba(52, 211, 153, 0.35);
+  stroke-dasharray: 6 4;
+}
+
+.cctv-map-zone:hover,
+.cctv-map-zone.is-selected {
+  fill: rgba(52, 211, 153, 0.16);
+  stroke: rgba(52, 211, 153, 0.6);
+}
+
+.cctv-map-zone.is-active {
+  fill: rgba(239, 68, 68, 0.22);
+  stroke: rgba(248, 113, 113, 0.85);
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.45));
+  animation: cctv-map-pulse 1.8s ease-in-out infinite;
+}
+
+.cctv-map-zone.is-critical {
+  fill: rgba(220, 38, 38, 0.38);
+  stroke: #ef4444;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.65));
+  animation: cctv-map-pulse-critical 1.2s ease-in-out infinite;
+}
+
+@keyframes cctv-map-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.78; }
+}
+
+@keyframes cctv-map-pulse-critical {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.88; }
+}
+
+.cctv-map-zone-label {
+  fill: rgba(203, 213, 225, 0.9);
+  font-size: 10px;
+  font-weight: 500;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.cctv-map-zone-label.is-alert {
+  fill: #fecaca;
+  font-weight: 700;
+}
+
+.cctv-map-road-label {
+  fill: #f1f5f9;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+.cctv-map-road-sub {
+  fill: rgba(148, 163, 184, 0.85);
+  font-size: 10px;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+.cctv-map-vehicle-body {
+  fill: rgba(52, 211, 153, 0.18);
+  stroke: rgba(52, 211, 153, 0.55);
+  stroke-width: 1;
+}
+
+.cctv-map-vehicle-icon {
+  font-size: 13px;
+}
+
+/* HTML camera pins (float above 3D scene) */
+.cctv-map-pins-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cctv-map-html-pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  pointer-events: auto;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.2s ease, filter 0.2s;
+}
+
+.cctv-map-html-pin:hover,
+.cctv-map-html-pin.is-selected {
+  transform: translate(-50%, -100%) scale(1.05);
+  z-index: 3;
+}
+
+.cctv-map-html-pin-pole {
+  display: block;
+  width: 2px;
+  height: 18px;
+  margin: 0 auto;
+  background: linear-gradient(to bottom, rgba(52, 211, 153, 0.8), rgba(52, 211, 153, 0.1));
+  border-radius: 1px;
+}
+
+.cctv-map-html-pin.has-alert .cctv-map-html-pin-pole {
+  background: linear-gradient(to bottom, rgba(239, 68, 68, 0.9), rgba(239, 68, 68, 0.1));
+}
+
+.cctv-map-html-pin-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.625rem;
+  background: rgba(12, 16, 24, 0.92);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+
+.cctv-map-html-pin.has-alert .cctv-map-html-pin-card {
+  border-color: rgba(239, 68, 68, 0.55);
+  box-shadow:
+    0 4px 20px rgba(239, 68, 68, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.cctv-map-html-pin.is-selected .cctv-map-html-pin-card {
+  border-color: #34d399;
+  box-shadow:
+    0 6px 28px rgba(52, 211, 153, 0.25),
+    0 0 0 1px rgba(52, 211, 153, 0.2) inset;
+}
+
+.cctv-map-html-pin-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.cctv-map-html-pin-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+}
+
+.cctv-map-html-pin-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #fff;
+}
+
+.cctv-map-html-pin-status {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.cctv-map-html-pin-status.is-live {
+  color: #34d399;
+}
+
+.cctv-map-html-pin-badge {
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.15rem;
+}
+
+/* Legend */
+.cctv-map-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.625rem;
+  background: rgba(8, 12, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  z-index: 6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.cctv-map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.625rem;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.cctv-map-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.cctv-map-legend-swatch--clear {
+  background: rgba(52, 211, 153, 0.2);
+  border: 1px solid rgba(52, 211, 153, 0.5);
+}
+
+.cctv-map-legend-swatch--active {
+  background: rgba(239, 68, 68, 0.3);
+  border: 1px solid #f87171;
+}
+
+.cctv-map-legend-swatch--critical {
+  background: rgba(220, 38, 38, 0.5);
+  border: 1px solid #ef4444;
+}
+
+.cctv-map-legend-swatch--yolo {
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px dashed rgba(52, 211, 153, 0.6);
+}
+
+/* Camera detail panel (right) — glass slide-in */
+.cctv-map-camera-panel {
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.875rem;
+  background: linear-gradient(180deg, rgba(16, 22, 32, 0.94) 0%, rgba(10, 14, 22, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+  animation: cctv-panel-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cctv-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.cctv-map-camera-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1rem 1rem 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%);
+}
+
+.cctv-map-camera-panel-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-guardian-accent, #34d399);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.cctv-map-camera-panel-title {
+  margin-top: 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cctv-map-panel-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 0.375rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-guardian-muted, #8b95a8);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cctv-map-panel-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.cctv-map-camera-preview {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #0a0e12;
+  margin: 0 1rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid var(--color-guardian-border-subtle, #1e2430);
+}
+
+.cctv-map-camera-preview-inner {
+  position: absolute;
+  inset: 0;
+}
+
+.cctv-map-camera-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.cctv-map-camera-preview-img.is-live {
+  opacity: 1;
+}
+
+.cctv-map-camera-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 0.5rem;
+  color: var(--color-guardian-muted, #8b95a8);
+  font-size: 0.75rem;
+}
+
+.cctv-map-camera-status {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cctv-map-camera-status--online,
+.cctv-map-camera-status--playback {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+}
+
+.cctv-map-camera-status--offline,
+.cctv-map-camera-status--empty {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+}
+
+.cctv-map-camera-actions {
+  padding: 1rem;
+}
+
+.cctv-map-open-feed-btn {
+  width: 100%;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
+}
+
+.cctv-map-no-ai-note {
+  margin-top: 0.625rem;
+  font-size: 0.6875rem;
+  color: rgba(148, 163, 184, 0.75);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.cctv-map-camera-alerts {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 1rem 1rem;
+}
+
+.cctv-map-camera-alerts-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-guardian-muted, #8b95a8);
+  margin-bottom: 0.5rem;
+}
+
+.cctv-map-camera-alerts ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.cctv-map-camera-alert-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.5rem;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.cctv-map-camera-alert-row:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.cctv-map-camera-alert-event {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+.cctv-map-camera-alert-meta {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--color-guardian-muted, #8b95a8);
+  margin-top: 0.15rem;
+}
+
+.cctv-map-camera-clear {
+  padding: 0 1rem 1rem;
+  font-size: 0.75rem;
+  color: var(--color-guardian-muted, #8b95a8);
+}
+
+/* Raw video preview (no AI) */
+.cctv-map-preview {
+  margin: 0 1rem;
+}
+
+.cctv-map-panel-preview {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+.cctv-map-preview-frame {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.625rem;
+  overflow: hidden;
+  background: #060a10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+  contain: layout style paint;
+}
+
+.cctv-map-preview-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.cctv-map-preview-empty {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.cctv-map-preview-empty-icon {
+  font-size: 1.25rem;
+  opacity: 0.6;
+}
+
+.cctv-map-preview-live {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #fca5a5;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cctv-map-preview-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+  animation: cctv-chip-pulse 1.5s ease-in-out infinite;
+}
+
+.cctv-map-panel-incident {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #f87171;
+}
+
+.cctv-map-panel-secure {
+  margin-top: 0.25rem;
+  font-size: 0.6875rem;
+  color: rgba(52, 211, 153, 0.85);
+}
+
+@keyframes cctv-float-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Floating data preview on map */
+.cctv-map-preview-connector {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 7;
+}
+
+.cctv-map-float-preview {
+  position: absolute;
+  z-index: 8;
+  width: min(272px, 44vw);
+  border-radius: 0.875rem;
+  background: linear-gradient(165deg, rgba(14, 20, 30, 0.98) 0%, rgba(8, 12, 20, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+  animation: cctv-float-in 0.22s ease-out;
+}
+
+.cctv-map-float-preview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem 0.7rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cctv-map-float-preview-head-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.cctv-map-float-preview-titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.cctv-map-float-preview-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
+.cctv-map-float-preview-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--hero-color, #34d399) 40%, transparent);
+  color: var(--hero-color, #34d399);
+  flex-shrink: 0;
+}
+
+.cctv-map-float-preview-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.cctv-map-float-preview-badge {
+  display: block;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.9);
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+}
+
+.cctv-map-float-preview-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.25;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cctv-map-float-preview-meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.6875rem;
+  color: rgba(148, 163, 184, 0.9);
+  line-height: 1.35;
+}
+
+.cctv-map-float-preview-close {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(203, 213, 225, 0.9);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cctv-map-float-preview-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.cctv-map-data-panel {
+  padding: 0.7rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.cctv-map-data-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cctv-map-data-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.cctv-map-data-status--online,
+.cctv-map-data-status--playback {
+  background: rgba(52, 211, 153, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.22);
+}
+
+.cctv-map-data-status--offline,
+.cctv-map-data-status--empty {
+  background: rgba(100, 116, 139, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.22);
+}
+
+.cctv-map-data-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.cctv-map-data-stats > div {
+  padding: 0.45rem 0.4rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
+}
+
+.cctv-map-data-stats dt {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.cctv-map-data-stats dd {
+  margin: 0.2rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.1;
+}
+
+.cctv-map-data-stats dd.is-alert {
+  color: #f87171;
+}
+
+.cctv-map-data-stats dd.is-active {
+  font-size: 0.75rem;
+  color: #34d399;
+}
+
+.cctv-map-data-stats dd.is-muted {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.cctv-map-data-alert {
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.5rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+}
+
+.cctv-map-data-alert--down {
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.28);
+}
+
+.cctv-map-data-alert--down .cctv-map-data-alert-label {
+  color: rgba(251, 146, 60, 0.95);
+}
+
+.cctv-map-data-alert--down .cctv-map-data-alert-text {
+  color: #fdba74;
+}
+
+.cctv-map-float-preview-down-note {
+  margin: 0;
+  font-size: 0.6875rem;
+  text-align: center;
+}
+
+.cctv-map-data-alert-label {
+  display: block;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.cctv-map-data-alert-text {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  margin-top: 0.15rem;
+}
+
+.cctv-map-data-alert-meta {
+  display: block;
+  font-size: 0.625rem;
+  color: rgba(148, 163, 184, 0.9);
+  margin-top: 0.1rem;
+}
+
+.cctv-map-data-clear {
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.45rem;
+  background: rgba(52, 211, 153, 0.06);
+  border: 1px solid rgba(52, 211, 153, 0.12);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: rgba(52, 211, 153, 0.9);
+  text-align: center;
+}
+
+.cctv-map-data-zones {
+  margin: 0;
+  font-size: 0.625rem;
+  color: rgba(148, 163, 184, 0.8);
+  line-height: 1.4;
+}
+
+.cctv-map-float-preview-foot {
+  padding: 0 0.85rem 0.85rem;
+}
+
+.cctv-map-open-monitor-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(145deg, #22c55e, #16a34a);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+}
+
+.cctv-map-open-monitor-btn:hover {
+  filter: brightness(1.08);
+}
+
+.cctv-map-open-monitor-btn:active {
+  transform: scale(0.98);
+}
+
+.cctv-map-open-monitor-btn svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.cctv-scene-road {
+  pointer-events: none;
+}
