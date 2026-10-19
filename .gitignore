@@ -16,31 +16,31 @@ out-tsc/
 frontend-react-old/
 
 yolo*.pt
-data/deepface/
-data/multicam/embeddings/
+backend/data/deepface/
+backend/data/multicam/embeddings/
 
-data/guardian.db
 *.db
 *.sqlite3
-data/multicam/*
-!data/multicam/README.md
-data/watchlist/*
-!data/watchlist/README.md
-data/behavior/clips/
-test_videos/
+backend/data/multicam/*
+!backend/data/multicam/README.md
+backend/data/watchlist/*
+!backend/data/watchlist/README.md
+backend/data/behavior/clips/
+backend/test_videos/
 
-uploads/*
-!uploads/.gitkeep
-outputs/*
-!outputs/.gitkeep
-snapshots/**/*
-!snapshots/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/outputs/*
+!backend/outputs/.gitkeep
+backend/snapshots/**/*
+!backend/snapshots/.gitkeep
 *.log
 
 _backup_*/
+_old_bak/
 _github_copy/
 github-upload/
-_gitignore_old.txt
+export_for_github.sh
 *.bak
 *.bak*
 *.orig
@@ -48,3 +48,14 @@ _gitignore_old.txt
 .DS_Store
 .idea/
 .vscode/
+
+*.pth
+datasets/
+virtual_environment/
+output_*.mp4
+checkpoint.json
+*.zip
+ai/behaviour/datasets/
+ai\videos
+crowd_human/
+ai/models/*.pt
