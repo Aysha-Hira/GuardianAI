@@ -16,8 +16,8 @@ dist/
 .ngcheck/
 out-tsc/
 
-# ---- Old React frontend (replaced by frontend-angular/) ----
-frontend/
+# ---- Old React frontend (kept locally only) ----
+frontend-react-old/
 
 # ---- Large model weights (downloaded automatically / by setup scripts) ----
 yolo*.pt

@@ -22,7 +22,6 @@ import { SubscriptionPage } from './pages/subscription'
 import { SubscriptionCheckoutPage } from './pages/subscription-checkout'
 import { SubscriptionConfirmationPage } from './pages/subscription-confirmation'
 
-/** Same URLs as the React router in frontend/src/App.tsx. */
 export const routes: Routes = [
   { path: 'terms', component: TermsPage },
   { path: 'privacy', component: PrivacyPage },
