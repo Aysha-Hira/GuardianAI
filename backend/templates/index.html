@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guardian AI — Live Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css?v=32" />
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <p class="eyebrow">Security Monitoring</p>
+      <h1>GUARDIAN AI</h1>
+      <div class="cam2-admin hidden" id="cam2-admin">
+        <span class="cam2-admin-label" id="cam2-admin-label">CCTV 02</span>
+        <button type="button" id="btn-delete-camera2" class="source-btn danger">Delete Recording</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="monitor-layout" id="monitor-layout">
+      <section class="camera-shell camera-shell-main" id="camera-shell">
+        <p class="panel-label panel-label-main">FULL CCTV VIEW</p>
+        <div class="camera-frame" id="camera-frame">
+          <div class="video-viewport" id="video-viewport">
+            <div class="video-stage" id="video-stage">
+              <img id="video-stream" alt="Guardian AI live camera feed" />
+            </div>
+            <canvas id="zone-edit-canvas" class="zone-edit-layer hidden" aria-hidden="true"></canvas>
+          </div>
+
+          <div class="cam-header">
+            <div class="cam-nav" role="navigation" aria-label="Camera channels">
+              <button type="button" id="btn-cam-prev" class="cam-nav-btn" title="Previous camera" aria-label="Previous camera">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+              </button>
+              <div class="cam-name" id="cam-name">CCTV 01 — Laptop Camera</div>
+              <button type="button" id="btn-cam-next" class="cam-nav-btn" title="Next camera" aria-label="Next camera">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+              </button>
+            </div>
+            <div class="cam-header-right">
+              <div class="cam-live">
+                <span class="live-badge" id="live-badge">
+                  <span class="dot" id="live-dot" aria-hidden="true"></span>
+                  <span id="live-text">OFFLINE</span>
+                </span>
+                <time class="cam-clock" id="cam-clock" datetime="">--:--:--</time>
+              </div>
+              <div class="cam-controls" role="toolbar" aria-label="Camera controls">
+                <button type="button" id="btn-edit-zone" class="ctrl-btn" title="Edit restricted zone" aria-label="Edit restricted zone">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+                <button type="button" id="btn-loop" class="ctrl-btn hidden" title="Pause loop" aria-label="Pause or resume loop playback">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.959 7.959 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.928 7.928 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/><path d="M10 8v8l6-4-6-4z" opacity="0.85"/></svg>
+                </button>
+                <button type="button" id="btn-snapshot" class="ctrl-btn" title="Snapshot" aria-label="Take snapshot">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.17L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+                </button>
+                <button type="button" id="btn-fullscreen" class="ctrl-btn" title="Fullscreen" aria-label="Toggle fullscreen">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                </button>
+                <button type="button" id="btn-reset-view" class="ctrl-btn" title="Reset view" aria-label="Reset zoom and pan">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 13c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 13c0 4.42 3.58 8 8 8v3l5-5-5-5v3z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p class="snapshot-msg" id="snapshot-msg" aria-live="polite"></p>
+
+          <div class="zone-edit-bar hidden" id="zone-edit-bar">
+            <span class="zone-edit-hint muted">Drag empty area to add · drag box to move · corners to resize</span>
+            <button type="button" class="source-btn primary" id="btn-zone-save">Save Zones</button>
+            <button type="button" class="source-btn" id="btn-zone-cancel">Cancel</button>
+          </div>
+
+          <div class="zone-event-banner hidden" id="zone-event-banner" aria-live="assertive">
+            <p class="zone-event-title" id="zone-event-title">⚠ RESTRICTED AREA ENTRY</p>
+            <p class="zone-event-track" id="zone-event-track">Track #—</p>
+            <p class="zone-event-detail hidden" id="zone-event-detail"></p>
+            <p class="zone-event-time" id="zone-event-time">--:--:--</p>
+          </div>
+
+          <div class="cam2-setup hidden" id="cam2-setup">
+            <div class="cam2-setup-inner">
+              <div class="cam2-setup-head">
+                <p class="cam2-setup-title">CCTV 02 — Load Recording</p>
+                <button type="button" id="btn-close-cam2-setup" class="cam2-setup-close" title="Close" aria-label="Close upload prompt">×</button>
+              </div>
+              <p class="cam2-setup-hint muted">Upload an MP4, AVI, or MOV file to use as the loop feed.</p>
+              <div class="cam2-setup-row">
+                <input type="file" id="video-file" accept=".mp4,.avi,.mov,video/mp4,video/quicktime,video/x-msvideo" />
+                <span class="upload-name muted" id="upload-name">No recording loaded</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="camera-overlay-left" id="camera-overlay-left">
+          <div class="tracking-panel" id="tracking-panel">
+            <p class="tracking-panel-title">TRACKING</p>
+            <div class="tracking-summary">
+              Active Tracks: <span id="tracking-active-count">0</span>
+            </div>
+            <ul class="tracking-list" id="tracking-list" aria-live="polite"></ul>
+            <label class="trail-toggle">
+              <input type="checkbox" id="toggle-trails" />
+              <span>Show Track Trails</span>
+            </label>
+            <div class="loitering-threshold-row">
+              <span class="loitering-label">Loitering Threshold</span>
+              <div class="loitering-input-row">
+                <input type="number" id="loitering-threshold-input" min="5" max="300" step="1" value="15" aria-label="Loitering threshold seconds" />
+                <span class="loitering-unit">sec</span>
+                <button type="button" class="source-btn loitering-apply-btn" id="btn-loitering-apply">Apply</button>
+              </div>
+              <p class="loitering-threshold-msg hidden" id="loitering-threshold-msg" aria-live="polite"></p>
+            </div>
+            <ul class="event-feed" id="event-feed" aria-live="polite"></ul>
+            <div class="zone-status-row">
+              <span class="muted">Restricted Zone:</span>
+              <span id="zone-status-label">Not Set</span>
+            </div>
+            <p class="zone-source-note muted" id="zone-source-note"></p>
+            <button type="button" class="source-btn danger zone-clear-btn hidden" id="btn-clear-zone">Clear Zone</button>
+          </div>
+
+          <div class="info-panel" id="camera-overlay">
+            <p class="info-panel-title" id="info-panel-title">Live Camera Info</p>
+
+            <div class="info-row info-row-split">
+              <span class="info-left">
+                <span class="info-icon-wrap status" aria-hidden="true">
+                  <span class="dot small" id="overlay-dot"></span>
+                </span>
+                <span id="overlay-online">Offline</span>
+              </span>
+              <span class="info-right muted" id="overlay-sync">Live feed</span>
+            </div>
+
+            <div class="info-row info-row-split">
+              <span class="info-left">
+                <span class="info-icon-wrap resolution" aria-hidden="true">
+                  <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.447.894L15 14M3 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"/>
+                  </svg>
+                </span>
+                <span id="overlay-resolution">—</span>
+              </span>
+              <span class="info-right">
+                <span class="info-icon-wrap fps" aria-hidden="true">
+                  <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>
+                  </svg>
+                </span>
+                <span id="overlay-fps">0.0</span> <span id="fps-label">fps</span>
+              </span>
+            </div>
+
+            <div class="info-row">
+              <span class="info-left">
+                <span class="info-icon-wrap people" aria-hidden="true">
+                  <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </span>
+                <span id="overlay-people">0</span> People
+              </span>
+            </div>
+
+            <div class="info-row">
+              <span class="info-left">
+                <span class="info-icon-wrap tracks" aria-hidden="true">
+                  <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+                  </svg>
+                </span>
+                Active Tracks: <span id="overlay-tracks">0</span>
+              </span>
+            </div>
+          </div>
+          </div>
+
+          <div class="view-controls">
+            <div class="zoom-bar" aria-label="Digital zoom">
+              <button type="button" id="btn-zoom-out" class="ctrl-btn small" title="Zoom out" aria-label="Zoom out">−</button>
+              <span class="zoom-label" id="zoom-label">1.0×</span>
+              <button type="button" id="btn-zoom-in" class="ctrl-btn small" title="Zoom in" aria-label="Zoom in">+</button>
+            </div>
+            <div class="pan-pad" aria-label="Digital pan">
+              <button type="button" id="btn-pan-up" class="pan-btn" title="Pan up" aria-label="Pan up" disabled>▲</button>
+              <div class="pan-row">
+                <button type="button" id="btn-pan-left" class="pan-btn" title="Pan left" aria-label="Pan left" disabled>◀</button>
+                <span class="pan-center" aria-hidden="true"></span>
+                <button type="button" id="btn-pan-right" class="pan-btn" title="Pan right" aria-label="Pan right" disabled>▶</button>
+              </div>
+              <button type="button" id="btn-pan-down" class="pan-btn" title="Pan down" aria-label="Pan down" disabled>▼</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="incident-focus-shell hidden" id="incident-focus-shell" aria-label="Incident Focus">
+        <p class="panel-label">INCIDENT FOCUS</p>
+        <div class="incident-focus-grid" id="incident-focus-grid"></div>
+        <p class="focus-idle-msg focus-idle-global" id="focus-idle-global">NO ACTIVE INCIDENT</p>
+      </section>
+
+      <aside class="alerts-panel" id="alerts-panel" aria-label="Security Alerts">
+        <div class="alerts-panel-header">
+          <p class="panel-label alerts-panel-title">ALERTS <span class="alerts-new-count hidden" id="alerts-new-count">0</span></p>
+        </div>
+        <div class="alerts-filters" role="toolbar" aria-label="Alert filters">
+          <button type="button" class="alert-filter-btn active" data-filter="all">ALL</button>
+          <button type="button" class="alert-filter-btn" data-filter="new">NEW</button>
+          <button type="button" class="alert-filter-btn" data-filter="high">HIGH</button>
+          <button type="button" class="alert-filter-btn" data-filter="resolved">RESOLVED</button>
+        </div>
+        <ul class="alerts-list" id="alerts-list" aria-live="polite"></ul>
+        <p class="alerts-empty muted hidden" id="alerts-empty">No alerts this session</p>
+      </aside>
+      </div>
+    </main>
+  </div>
+
+  <div class="alert-modal hidden" id="alert-modal" role="dialog" aria-modal="true" aria-labelledby="alert-modal-title">
+    <div class="alert-modal-backdrop" id="alert-modal-backdrop"></div>
+    <div class="alert-modal-card">
+      <div class="alert-modal-header">
+        <h2 class="alert-modal-title" id="alert-modal-title">Alert Details</h2>
+        <button type="button" class="alert-modal-close" id="alert-modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="alert-modal-body" id="alert-modal-body"></div>
+      <div class="alert-modal-actions" id="alert-modal-actions"></div>
+    </div>
+  </div>
+
+  <div class="evidence-lightbox hidden" id="evidence-lightbox" role="dialog" aria-modal="true">
+    <button type="button" class="evidence-lightbox-close" id="evidence-lightbox-close" aria-label="Close">×</button>
+    <img id="evidence-lightbox-img" alt="Evidence enlargement" />
+  </div>
+
+  <script src="/static/app.js?v=32"></script>
+</body>
+</html>

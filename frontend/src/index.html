@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <base href="/" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guardian AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <app-root id="root" style="display: block">
+      <div class="flex min-h-screen items-center justify-center bg-guardian-bg">
+        <div class="guardian-loader guardian-loader--fullscreen" role="status" aria-live="polite" aria-busy="true">
+          <div class="guardian-loader__visual" aria-hidden="true">
+            <span class="guardian-loader__ring"></span>
+            <span class="guardian-loader__ring guardian-loader__ring--inner"></span>
+            <span class="guardian-loader__core">
+              <svg viewBox="0 0 24 24" fill="none" class="guardian-loader__shield">
+                <path d="M12 2L4 5.5V11.5C4 16.5 7.5 20.5 12 22C16.5 20.5 20 16.5 20 11.5V5.5L12 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+              </svg>
+            </span>
+            <span class="guardian-loader__scan"></span>
+          </div>
+          <p class="guardian-loader__text">Loading session…</p>
+        </div>
+      </div>
+    </app-root>
+  </body>
+</html>

@@ -1,0 +1,341 @@
+.multicam-lab-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1100px) {
+  .multicam-lab-grid {
+    grid-template-columns: minmax(280px, 360px) 1fr;
+    align-items: start;
+  }
+}
+
+.multicam-phase-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--color-guardian-border-subtle);
+  background: rgba(8, 10, 15, 0.5);
+  color: var(--color-guardian-muted);
+}
+
+.multicam-phase-running,
+.multicam-phase-loading,
+.multicam-phase-camera_1,
+.multicam-phase-camera_2,
+.multicam-phase-writing,
+.multicam-phase-starting {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.multicam-phase-completed {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.multicam-phase-error {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.multicam-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.multicam-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--color-guardian-muted);
+}
+
+.multicam-field-checkbox {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.multicam-field-checkbox input {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.multicam-field-hint {
+  margin: -0.1rem 0 0.25rem;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--color-guardian-muted);
+}
+
+.multicam-gt-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #fbbf24;
+  line-height: 1.4;
+}
+
+.multicam-run-btn {
+  margin-top: 0.25rem;
+}
+
+.multicam-status-line {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--color-guardian-text);
+}
+
+.multicam-error-line {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #f87171;
+}
+
+.multicam-toast {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #34d399;
+}
+
+.multicam-hint {
+  margin-top: 0.75rem;
+  font-size: 0.7rem;
+  color: var(--color-guardian-muted);
+}
+
+.multicam-upload-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .multicam-upload-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.multicam-upload-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-guardian-border-subtle);
+  background: rgba(8, 10, 15, 0.35);
+}
+
+.multicam-upload-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.multicam-upload-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-guardian-text);
+}
+
+.multicam-upload-hint {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--color-guardian-muted);
+}
+
+.multicam-upload-badge {
+  flex-shrink: 0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-guardian-muted);
+  border: 1px solid var(--color-guardian-border-subtle);
+}
+
+.multicam-upload-badge.is-ready {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.multicam-source-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.multicam-source-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  border-radius: 0.375rem;
+  background: #050608;
+}
+
+.multicam-source-meta {
+  font-size: 0.68rem;
+  color: var(--color-guardian-muted);
+}
+
+.multicam-source-empty {
+  font-size: 0.75rem;
+  color: var(--color-guardian-muted);
+  padding: 1.25rem 0;
+  text-align: center;
+  border: 1px dashed var(--color-guardian-border-subtle);
+  border-radius: 0.375rem;
+}
+
+.multicam-upload-btn {
+  align-self: flex-start;
+}
+
+.multicam-preset-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+@media (min-width: 768px) {
+  .multicam-preset-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .multicam-preset-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.multicam-preset-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  text-align: left;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-guardian-border-subtle);
+  background: rgba(8, 10, 15, 0.35);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.multicam-preset-card:hover:not(:disabled) {
+  border-color: rgba(96, 165, 250, 0.35);
+  background: rgba(96, 165, 250, 0.06);
+}
+
+.multicam-preset-card.is-active {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.multicam-preset-card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.multicam-preset-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-guardian-text);
+}
+
+.multicam-preset-hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.multicam-preset-desc {
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: var(--color-guardian-muted);
+  flex: 1;
+}
+
+.multicam-preset-active-tag,
+.multicam-preset-loading {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #34d399;
+}
+
+.multicam-video-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--color-guardian-border-subtle);
+}
+
+.multicam-video-tab {
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.375rem;
+  font-size: 0.72rem;
+  color: var(--color-guardian-muted);
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.multicam-video-tab.is-active {
+  color: var(--color-guardian-text);
+  border-color: rgba(96, 165, 250, 0.35);
+  background: rgba(96, 165, 250, 0.08);
+}
+
+.multicam-video-wrap {
+  aspect-ratio: 16 / 9;
+  background: #050608;
+}
+
+.multicam-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.multicam-video-placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-guardian-muted);
+}
+
+.multicam-table-wrap {
+  overflow-x: auto;
+}
+
+.multicam-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.multicam-table th,
+.multicam-table td {
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-guardian-border-subtle);
+}
+
+.multicam-table th {
+  color: var(--color-guardian-muted);
+  font-weight: 500;
+}
