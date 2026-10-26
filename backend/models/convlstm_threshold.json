@@ -1,0 +1,16 @@
+{
+  "threshold": 0.017668214179575443,
+  "percentile": 99.5,
+  "val_mean_mse": 0.005618759377214771,
+  "val_std_mse": 0.003951773794882602,
+  "synthetic_anomaly_score": 0.16214589774608612,
+  "train_clips": 217,
+  "val_clips": 39,
+  "video_sources": [
+    "test_videos/cctv_pedestrians_epfl_campus_01.mp4",
+    "test_videos/cctv_pedestrians_epfl_passageway_01.mp4",
+    "test_videos/cctv_pedestrians_epfl_terrace_01.mp4",
+    "test_videos/cctv_pedestrians_mall_surveillance_01.mp4",
+    "uploads/cctv_100484ac.mp4"
+  ]
+}
