@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core'
 import { Router, RouterLink } from '@angular/router'
+import { AuthService } from '../core/auth.service'
 import { createPoll, POLL_KEYS } from '../core/polling'
 import { CctvTileComponent } from '../features/cameras/cameras-ui'
 import { api } from '../shared/services/api'
@@ -33,6 +34,9 @@ const LEGEND = [
               } @else {
                 <span class="cctv-live-badge"><span class="cctv-live-dot"></span>{{ liveCount() }} live</span>
               }
+              @if (!auth.isAdmin()) {
+                <span class="role-note">View only — sources are managed by an administrator</span>
+              }
               <a routerLink="/monitoring" class="btn-primary text-xs">Open Monitoring</a>
             </div>
           </div>
@@ -52,6 +56,7 @@ const LEGEND = [
                 [active]="camera.id === activeId()"
                 [activating]="activatingId() === camera.id"
                 [uploading]="uploadingId() === camera.id"
+                [canManage]="auth.isAdmin()"
                 (activate)="activateCamera(camera.id)"
                 (upload)="handleUpload(camera.id, $event)"
                 (remove)="handleDelete(camera.id)"
@@ -80,6 +85,7 @@ const LEGEND = [
 })
 export class CamerasPage {
   private readonly router = inject(Router)
+  protected readonly auth = inject(AuthService)
   protected readonly camerasPoll = createPoll(() => api.getCameras(), 2000, POLL_KEYS.cameras)
   protected readonly statusPoll = createPoll(() => api.getStatus(), 2000, POLL_KEYS.status)
   protected readonly legend = LEGEND

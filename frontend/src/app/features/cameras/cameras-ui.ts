@@ -191,11 +191,11 @@ function statusChip(camera: CameraChannel, active: boolean, aiEnabled: boolean):
         @if (!isSearching()) {
           <div class="cctv-tile-toggles">
             <label class="cctv-toggle">
-              <input type="checkbox" [checked]="aiEnabled()" (change)="settings.emit({ ai_enabled: $any($event.target).checked })" />
+              <input type="checkbox" [checked]="aiEnabled()" [disabled]="!canManage()" (change)="settings.emit({ ai_enabled: $any($event.target).checked })" />
               <span>AI Tracking</span>
             </label>
             <label class="cctv-toggle">
-              <input type="checkbox" [checked]="showBoxes()" [disabled]="!aiEnabled()" (change)="settings.emit({ show_boxes: $any($event.target).checked })" />
+              <input type="checkbox" [checked]="showBoxes()" [disabled]="!aiEnabled() || !canManage()" (change)="settings.emit({ show_boxes: $any($event.target).checked })" />
               <span>Show Boxes</span>
             </label>
           </div>
@@ -206,14 +206,14 @@ function statusChip(camera: CameraChannel, active: boolean, aiEnabled: boolean):
             <button type="button" class="cctv-btn cctv-btn-primary" [disabled]="activating()" (click)="activate.emit()">
               {{ activating() ? 'Opening…' : 'Open in Monitoring' }}
             </button>
-          } @else if (isVideoSlot() && !cam.available) {
+          } @else if (isVideoSlot() && !cam.available && canManage()) {
             <input #fileInput type="file" accept="video/mp4,video/avi,video/quicktime,.mp4,.avi,.mov" class="hidden" (change)="onFile($event)" />
             <button type="button" class="cctv-btn cctv-btn-primary" [disabled]="uploading()" (click)="fileInput.click()">Upload Video</button>
           } @else {
             <span class="cctv-footer-note">{{ cam.id === 1 ? 'Waiting for webcam…' : 'No source' }}</span>
           }
 
-          @if (isVideoSlot() && cam.available) {
+          @if (isVideoSlot() && cam.available && canManage()) {
             <input #replaceInput type="file" accept="video/mp4,video/avi,video/quicktime,.mp4,.avi,.mov" class="hidden" (change)="onFile($event)" />
             <button type="button" class="cctv-btn" [disabled]="uploading()" (click)="replaceInput.click()">Replace</button>
             <button type="button" class="cctv-btn cctv-btn-danger" (click)="remove.emit()">Remove</button>
@@ -228,6 +228,7 @@ export class CctvTileComponent {
   readonly active = input(false)
   readonly activating = input(false)
   readonly uploading = input(false)
+  readonly canManage = input(true)
   readonly activate = output<void>()
   readonly upload = output<File>()
   readonly remove = output<void>()

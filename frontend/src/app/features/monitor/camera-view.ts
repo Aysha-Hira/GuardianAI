@@ -15,6 +15,7 @@ import { formatDuration, formatMmSs } from '../../shared/utils/monitorFormat'
 import { MonitorService } from './monitor.service'
 import { Router } from '@angular/router'
 import { SubscriptionService } from '../../core/subscription.service'
+import { AuthService } from '../../core/auth.service'
 import { VideoUploadControlComponent } from './side-panels'
 
 function monitorCameraLabel(viewCameraId: number, showVideoSetup: boolean, cameraLabel: string | null | undefined): string {
@@ -36,8 +37,10 @@ function monitorCameraLabel(viewCameraId: number, showVideoSetup: boolean, camer
           <span class="muted">
             {{ m.status()?.video_filename ? 'CCTV 0' + m.viewCameraId() + ' — ' + m.status()?.video_filename : 'CCTV 0' + m.viewCameraId() + ' — Recording' }}
           </span>
-          <button type="button" class="source-btn" (click)="m.openVideoReplace()">Replace Video</button>
-          <button type="button" class="source-btn danger" (click)="m.deleteVideoSlot()">Delete Recording</button>
+          @if (auth.isAdmin()) {
+            <button type="button" class="source-btn" (click)="m.openVideoReplace()">Replace Video</button>
+            <button type="button" class="source-btn danger" (click)="m.deleteVideoSlot()">Delete Recording</button>
+          }
         </div>
       }
 
@@ -111,7 +114,11 @@ function monitorCameraLabel(viewCameraId: number, showVideoSetup: boolean, camer
               <p class="cam2-setup-eyebrow">CCTV 0{{ m.viewCameraId() }}</p>
               <h3 class="cam2-setup-title">{{ m.videoReplaceMode() ? 'Replace Recording' : 'Load Recording' }}</h3>
               <p class="cam2-setup-desc">Upload MP4, AVI, or MOV (H.264 recommended). Max 100 MB.</p>
-              <app-video-upload-control variant="panel" label="Upload Video" />
+              @if (auth.isAdmin()) {
+                <app-video-upload-control variant="panel" label="Upload Video" />
+              } @else {
+                <p class="role-note">Only an administrator can load recordings.</p>
+              }
               <p class="muted cam2-upload-status">{{ m.uploadLabel() }}</p>
               <button type="button" class="source-btn cam2-setup-back" (click)="m.closeVideoSetup()">Back to CCTV 01</button>
             </div>
@@ -165,9 +172,11 @@ function monitorCameraLabel(viewCameraId: number, showVideoSetup: boolean, camer
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="eyeOffIcon" /></svg>
                     }
                   </button>
-                  <button type="button" [class]="'ctrl-btn' + (m.zoneEditMode() ? ' active-edit' : '')" title="Edit zone" (click)="m.startZoneEdit()">
-                    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
-                  </button>
+                  @if (auth.isAdmin()) {
+                    <button type="button" [class]="'ctrl-btn' + (m.zoneEditMode() ? ' active-edit' : '')" title="Edit zone" (click)="m.startZoneEdit()">
+                      <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
+                    </button>
+                  }
                   @if (isVideo()) {
                     <button type="button" class="ctrl-btn" title="Pause/resume" (click)="m.toggleLoop()">
                       <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
@@ -246,7 +255,7 @@ function monitorCameraLabel(viewCameraId: number, showVideoSetup: boolean, camer
                   <span class="muted">Restricted Zone:</span>
                   <span>{{ m.status()?.restricted_zone_label || 'Not Set' }}</span>
                 </div>
-                @if (hasZones()) {
+                @if (hasZones() && auth.isAdmin()) {
                   <button type="button" class="source-btn danger" style="width: 100%; margin-top: 0.45rem" (click)="m.clearZones()">Clear Zone</button>
                 }
               </div>
@@ -258,9 +267,13 @@ function monitorCameraLabel(viewCameraId: number, showVideoSetup: boolean, camer
                 <div class="loitering-threshold-row">
                   <span class="loitering-label">Loitering Threshold</span>
                   <div class="loitering-input-row">
-                    <input type="number" min="5" max="300" [value]="m.loiteringInput()" (input)="m.loiteringInput.set($any($event.target).value)" />
+                    <input type="number" min="5" max="300" [value]="m.loiteringInput()" [disabled]="!auth.isAdmin()" (input)="m.loiteringInput.set($any($event.target).value)" />
                     <span class="muted">sec</span>
-                    <button type="button" class="source-btn" (click)="m.applyLoitering()">Apply</button>
+                    @if (auth.isAdmin()) {
+                      <button type="button" class="source-btn" (click)="m.applyLoitering()">Apply</button>
+                    } @else {
+                      <span class="muted">Set by administrator</span>
+                    }
                   </div>
                   @if (m.loiteringMsg()) {
                     <p class="muted" [style.color]="m.loiteringOk() ? 'var(--m-accent)' : '#ff9090'" style="margin-top: 0.25rem">{{ m.loiteringMsg() }}</p>
@@ -349,6 +362,7 @@ function monitorCameraLabel(viewCameraId: number, showVideoSetup: boolean, camer
 export class CameraViewComponent {
   protected readonly m = inject(MonitorService)
   private readonly subs = inject(SubscriptionService)
+  protected readonly auth = inject(AuthService)
   private readonly router = inject(Router)
   protected readonly canRecord = computed(() => this.subs.current()?.recording !== false)
 

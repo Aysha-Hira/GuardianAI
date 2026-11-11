@@ -52,6 +52,7 @@ def _migrate_users_table() -> None:
         "mfa_expires": "TIMESTAMP WITH TIME ZONE" if not IS_SQLITE else "DATETIME",
         "mfa_attempts": "INTEGER NOT NULL DEFAULT 0",
         "mfa_sent_at": "TIMESTAMP WITH TIME ZONE" if not IS_SQLITE else "DATETIME",
+        "role": "VARCHAR(20) NOT NULL DEFAULT 'operator'",
     }
     with engine.begin() as conn:
         for column, ddl in additions.items():
@@ -61,10 +62,11 @@ def _migrate_users_table() -> None:
 
 def init_db() -> None:
     from auth import models
+    from auth import team as _team
     from alerts import db as _alerts_db
     from watchlist import db as _watchlist_db
     from subscriptions import db as _subscriptions_db
-    from auth.seed import seed_test_user
+    from auth.seed import ensure_admin_exists, seed_test_user
     from auth.service import cleanup_pending_registrations, migrate_unverified_users_to_pending
 
     Base.metadata.create_all(bind=engine)
@@ -78,6 +80,7 @@ def init_db() -> None:
         if removed:
             print(f"[Guardian Auth] Removed {removed} expired pending registration(s).")
         seed_test_user(db)
+        ensure_admin_exists(db)
         db.commit()
     finally:
         db.close()

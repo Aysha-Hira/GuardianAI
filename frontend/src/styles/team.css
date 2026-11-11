@@ -1,0 +1,181 @@
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.2rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-guardian-border);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.role-chip-admin {
+  color: var(--color-guardian-warning);
+  border-color: color-mix(in srgb, var(--color-guardian-warning) 45%, transparent);
+  background: color-mix(in srgb, var(--color-guardian-warning) 10%, transparent);
+}
+
+.role-chip-operator {
+  color: var(--color-guardian-info);
+  border-color: color-mix(in srgb, var(--color-guardian-info) 45%, transparent);
+  background: color-mix(in srgb, var(--color-guardian-info) 10%, transparent);
+}
+
+.role-note {
+  font-size: 0.72rem;
+  color: var(--color-guardian-muted);
+}
+
+.team-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.team-role-card {
+  border: 1px solid var(--color-guardian-border-subtle);
+  background: var(--color-guardian-panel);
+  border-radius: 0.75rem;
+  padding: 1rem 1.15rem;
+}
+
+.team-role-card ul {
+  margin-top: 0.6rem;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--color-guardian-text);
+}
+
+.team-role-card li::before {
+  content: "✓";
+  color: var(--color-guardian-accent);
+  margin-right: 0.45rem;
+}
+
+.team-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.team-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-guardian-muted);
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--color-guardian-border-subtle);
+}
+
+.team-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-guardian-border-subtle);
+  color: var(--color-guardian-text);
+  vertical-align: middle;
+}
+
+.team-table select {
+  background: var(--color-guardian-surface);
+  border: 1px solid var(--color-guardian-border);
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  color: var(--color-guardian-text);
+  font-size: 0.8rem;
+}
+
+.team-table select:disabled {
+  opacity: 0.55;
+}
+
+.team-card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-guardian-text);
+  margin-bottom: 0.2rem;
+}
+
+.team-invite-form {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.team-invite-form input,
+.team-invite-form select {
+  width: 100%;
+  background: var(--color-guardian-surface);
+  border: 1px solid var(--color-guardian-border);
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  color: var(--color-guardian-text);
+  font-size: 0.8rem;
+}
+
+.team-invite-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.team-invite-row select {
+  flex: 1;
+}
+
+.team-link {
+  margin-top: 0.6rem;
+  word-break: break-all;
+}
+
+.team-code-row {
+  margin-top: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.team-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.15rem;
+  letter-spacing: 0.18em;
+  color: var(--color-guardian-accent);
+  padding: 0.3rem 0.65rem;
+  border: 1px dashed color-mix(in srgb, var(--color-guardian-accent) 55%, transparent);
+  border-radius: 0.5rem;
+}
+
+.team-code.is-off {
+  color: var(--color-guardian-muted);
+  border-color: var(--color-guardian-border);
+  text-decoration: line-through;
+}
+
+.team-toggle {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-guardian-text);
+}
+
+.team-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.team-invite-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+
+.team-invite-btn {
+  min-width: 9rem;
+  justify-content: center;
+}

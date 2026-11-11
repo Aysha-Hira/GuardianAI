@@ -1,3 +1,4 @@
+import { AuthService } from '../core/auth.service'
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core'
 import { SubscriptionService } from '../core/subscription.service'
 import { ActivatedRoute, Router } from '@angular/router'
@@ -19,6 +20,12 @@ import { formatAed } from '../shared/utils/subscriptionMock'
       @if (upgradeReason() === 'recording') {
         <p class="rounded-lg border border-guardian-border bg-guardian-panel px-4 py-3 text-sm text-guardian-text">
           Recording isn’t included in the Free plan. Choose Professional or Enterprise to record your cameras.
+        </p>
+      }
+
+      @if (!auth.isAdmin()) {
+        <p class="rounded-lg border border-guardian-border bg-guardian-panel px-4 py-3 text-sm text-guardian-text">
+          You are signed in as an operator. Only an administrator can change the subscription plan.
         </p>
       }
 
@@ -61,6 +68,10 @@ import { formatAed } from '../shared/utils/subscriptionMock'
               <button type="button" class="subscription-plan-cta subscription-plan-cta-secondary" disabled>
                 Included for everyone
               </button>
+            } @else if (!auth.isAdmin()) {
+              <button type="button" class="subscription-plan-cta subscription-plan-cta-secondary" disabled>
+                Administrator only
+              </button>
             } @else {
               <button
                 type="button"
@@ -86,6 +97,7 @@ export class SubscriptionPage {
   protected readonly plans = SUBSCRIPTION_PLANS
   protected readonly aed = formatAed
   protected readonly subs = inject(SubscriptionService)
+  protected readonly auth = inject(AuthService)
   protected readonly currentPlanId = computed(() => this.subs.current()?.planId ?? 'free')
   private readonly query = inject(ActivatedRoute).snapshot.queryParamMap
   protected readonly upgradeReason = signal(this.query.get('upgrade'))

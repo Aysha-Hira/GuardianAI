@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from auth.cookies import clear_auth_cookies, set_auth_cookies, token_from_request
@@ -25,6 +25,11 @@ from auth.config import (
 from auth.database import db_session
 from auth.dependencies import get_current_user
 from auth.models import User
+from auth.rbac import ROLE_ADMIN, ROLE_PERMISSIONS, require_admin
+from auth.email import send_invitation_email
+from auth.security import hash_password
+from auth.config import AUTH_DEV_CODES
+from auth import team as team_service
 from auth.rate_limit import rate_limit_dependency
 from auth.schemas import (
     ChangePasswordRequest,
@@ -41,11 +46,16 @@ from auth.schemas import (
     ResetPasswordRequest,
     ResendVerificationRequest,
     UpdateProfileRequest,
+    UpdateRoleRequest,
+    InviteRequest,
+    AcceptInviteRequest,
     UserPublic,
     VerifyEmailRequest,
 )
 from auth.service import (
     _bump_token_version,
+    _issue_token,
+    normalize_email,
     change_password,
     confirm_mfa_enable,
     disable_mfa,
@@ -79,7 +89,10 @@ _limit_reset = Depends(rate_limit_dependency("reset", RATE_FORGOT_MAX, RATE_FORG
 @router.post("/register", dependencies=[_limit_register])
 async def register(payload: RegisterRequest, db: Session = Depends(db_session)):
     email, name, dev_code = register_user(
-        db, name=payload.name, email=str(payload.email), password=payload.password
+        db,
+        name=payload.name,
+        email=str(payload.email),
+        password=payload.password,
     )
     return JSONResponse(
         RegisterResponse(
@@ -224,6 +237,46 @@ async def change_pw(
     return JSONResponse(MessageResponse(message="Password changed successfully.").model_dump())
 
 
+def _team_member(user: User) -> dict:
+    return {
+        **user_public(user).model_dump(),
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+    }
+
+
+@router.get("/roles")
+async def list_roles(user: User = Depends(get_current_user)):
+    return JSONResponse({"roles": [{"id": role, "permissions": perms} for role, perms in ROLE_PERMISSIONS.items()]})
+
+
+@router.get("/users")
+async def list_users(admin: User = Depends(require_admin), db: Session = Depends(db_session)):
+    users = db.query(User).order_by(User.created_at.asc()).all()
+    return JSONResponse({"users": [_team_member(u) for u in users]})
+
+
+@router.patch("/users/{user_id}/role")
+async def update_user_role(
+    user_id: str,
+    payload: UpdateRoleRequest,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(db_session),
+):
+    target = get_user_by_id(db, user_id)
+    if target is None:
+        raise HTTPException(status_code=404, detail="User not found.")
+    if target.id == admin.id:
+        raise HTTPException(status_code=400, detail="You cannot change your own role.")
+    if target.role == ROLE_ADMIN and payload.role != ROLE_ADMIN:
+        admins = db.query(User).filter(User.role == ROLE_ADMIN).count()
+        if admins <= 1:
+            raise HTTPException(status_code=400, detail="At least one administrator is required.")
+    target.role = payload.role
+    db.commit()
+    db.refresh(target)
+    return JSONResponse({"ok": True, "user": _team_member(target)})
+
+
 if not IS_PRODUCTION:
 
     @router.get("/email-preview/verification", response_class=HTMLResponse)
@@ -258,3 +311,75 @@ if not IS_PRODUCTION:
   <a href="/auth/email-preview/reset">Password reset email</a>
 </body></html>"""
         )
+
+
+@router.get("/signup-info")
+async def signup_info(db: Session = Depends(db_session)):
+    return JSONResponse(team_service.signup_info(db))
+
+
+def _invite_response(inv, token: str, sent: bool, path: str) -> JSONResponse:
+    body: dict = {"ok": True, "email_sent": sent, "invitation": team_service.invitation_payload(inv)}
+    if not sent or AUTH_DEV_CODES:
+        body["invite_path"] = path
+    return JSONResponse(body)
+
+
+@router.get("/invitations")
+async def list_invitations(admin: User = Depends(require_admin), db: Session = Depends(db_session)):
+    invites = (
+        db.query(team_service.Invitation)
+        .filter(team_service.Invitation.accepted_at.is_(None))
+        .order_by(team_service.Invitation.created_at.desc())
+        .all()
+    )
+    return JSONResponse({"invitations": [team_service.invitation_payload(i) for i in invites]})
+
+
+@router.post("/invitations", dependencies=[_limit_resend])
+async def create_invitation(payload: InviteRequest, admin: User = Depends(require_admin), db: Session = Depends(db_session)):
+    inv, token = team_service.create_invitation(
+        db, admin=admin, email=normalize_email(str(payload.email)), name=payload.name, role=payload.role
+    )
+    db.commit()
+    sent, path = send_invitation_email(inv.email, token, inviter=admin.name, role=inv.role)
+    return _invite_response(inv, token, sent, path)
+
+
+@router.post("/invitations/{invitation_id}/resend", dependencies=[_limit_resend])
+async def resend_invitation(invitation_id: str, admin: User = Depends(require_admin), db: Session = Depends(db_session)):
+    inv = db.get(team_service.Invitation, invitation_id)
+    if inv is None:
+        raise HTTPException(status_code=404, detail="Invitation not found.")
+    token = team_service.refresh_invitation(db, inv)
+    db.commit()
+    sent, path = send_invitation_email(inv.email, token, inviter=admin.name, role=inv.role)
+    return _invite_response(inv, token, sent, path)
+
+
+@router.delete("/invitations/{invitation_id}")
+async def revoke_invitation(invitation_id: str, admin: User = Depends(require_admin), db: Session = Depends(db_session)):
+    inv = db.get(team_service.Invitation, invitation_id)
+    if inv is None or inv.accepted_at is not None:
+        raise HTTPException(status_code=404, detail="Invitation not found.")
+    db.delete(inv)
+    db.commit()
+    return JSONResponse({"ok": True})
+
+
+@router.get("/invitations/lookup", dependencies=[_limit_verify])
+async def lookup_invitation(token: str, db: Session = Depends(db_session)):
+    inv = team_service.find_open_invitation(db, token)
+    return JSONResponse(
+        {"email": inv.email, "name": inv.name, "role": inv.role, "invited_by": inv.invited_by_name}
+    )
+
+
+@router.post("/invitations/accept", dependencies=[_limit_verify])
+async def accept_invitation(payload: AcceptInviteRequest, db: Session = Depends(db_session)):
+    user = team_service.accept_invitation(
+        db, token=payload.token, name=payload.name, password_hash=hash_password(payload.password)
+    )
+    db.commit()
+    db.refresh(user)
+    return _session_response(user, _issue_token(user), remember=True)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
@@ -50,6 +52,7 @@ class UserPublic(BaseModel):
     name: str
     email_verified: bool
     mfa_enabled: bool = False
+    role: str = "operator"
 
 
 class AuthTokenResponse(BaseModel):
@@ -75,6 +78,22 @@ class ForgotPasswordResponse(BaseModel):
     ok: bool = True
     message: str
     reset_path: str | None = None
+
+
+class UpdateRoleRequest(BaseModel):
+    role: Literal["admin", "operator"]
+
+
+class InviteRequest(BaseModel):
+    email: EmailStr
+    name: str | None = Field(default=None, max_length=120)
+    role: Literal["admin", "operator"] = "operator"
+
+
+class AcceptInviteRequest(BaseModel):
+    token: str = Field(min_length=16, max_length=128)
+    name: str = Field(min_length=1, max_length=120)
+    password: str = Field(min_length=8, max_length=128)
 
 
 class MfaLoginRequest(BaseModel):

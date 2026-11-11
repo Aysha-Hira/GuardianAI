@@ -1,3 +1,4 @@
+import { AuthService } from '../core/auth.service'
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core'
 import { NgTemplateOutlet } from '@angular/common'
 import { toSignal } from '@angular/core/rxjs-interop'
@@ -66,7 +67,8 @@ const EVENT_OPTIONS: [string, string][] = [
               <span class="rounded-full border border-guardian-border bg-guardian-panel px-3 py-1.5 font-mono text-xs text-guardian-muted">
                 {{ filtered().length }} of {{ total() }} shown
               </span>
-              @if (confirmingDelete()) {
+              @if (!auth.isAdmin()) {
+              } @else if (confirmingDelete()) {
                 <span class="text-xs text-guardian-muted">Delete all {{ total() }} incidents and their snapshots?</span>
                 <button type="button" class="btn-ghost text-xs" (click)="confirmingDelete.set(false)" [disabled]="deleting()">Keep them</button>
                 <button type="button" class="rounded-lg bg-red-500/90 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-500 disabled:opacity-60"
@@ -132,6 +134,7 @@ const EVENT_OPTIONS: [string, string][] = [
   `,
 })
 export class IncidentsPage {
+  protected readonly auth = inject(AuthService)
   protected async deleteAll() {
     this.deleting.set(true)
     this.deleteMessage.set(null)
