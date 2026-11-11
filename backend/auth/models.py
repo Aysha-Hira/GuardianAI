@@ -55,6 +55,7 @@ class User(Base):
     mfa_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     mfa_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     mfa_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    role: Mapped[str] = mapped_column(String(20), default="operator", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=False

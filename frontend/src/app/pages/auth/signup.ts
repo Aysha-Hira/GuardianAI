@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core'
 import { Router, RouterLink } from '@angular/router'
 import { AuthService } from '../../core/auth.service'
+import { authApi } from '../../shared/services/authApi'
+import type { SignupInfo } from '../../shared/types/auth'
 import { AuthAlertComponent, AuthDemoBannerComponent } from '../../shared/ui/auth-alert'
 import { PasswordMatchComponent, PasswordRulesComponent } from '../../shared/ui/password-rules'
 import { allPasswordRulesMet } from '../../shared/utils/passwordValidation'
@@ -23,10 +25,17 @@ import { allPasswordRulesMet } from '../../shared/utils/passwordValidation'
         <p class="auth-card-sub">Set up operator access for your Guardian AI workspace.</p>
       </div>
 
+      @if (info()?.firstAccount) {
+        <div appAuthAlert variant="info">You are setting up Guardian AI. This first account will be the administrator.</div>
+      } @else if (info() && !info()!.signupOpen) {
+        <div appAuthAlert variant="info">Sign-up is by invitation only. Ask your administrator to send you an invitation email, then open the link in it to create your account.</div>
+      }
+
       @if (error()) {
         <div appAuthAlert variant="error">{{ error() }}</div>
       }
 
+      @if (!info() || info()!.signupOpen) {
       <form class="auth-form" (submit)="onSubmit($event)">
         <label class="auth-field" for="name">
           <span class="auth-field-label">Full name</span>
@@ -66,6 +75,7 @@ import { allPasswordRulesMet } from '../../shared/utils/passwordValidation'
           {{ loading() ? 'Creating account…' : 'Create account' }}
         </button>
       </form>
+      }
 
       @if (demoCode()) {
         <div appAuthDemoBanner bannerTitle="Email fallback — verification code">
@@ -92,6 +102,14 @@ export class SignupPage {
   protected readonly error = signal('')
   protected readonly loading = signal(false)
   protected readonly demoCode = signal<string | null>(null)
+  protected readonly info = signal<SignupInfo | null>(null)
+
+  constructor() {
+    authApi
+      .signupInfo()
+      .then((info) => this.info.set(info))
+      .catch(() => this.info.set(null))
+  }
 
   protected async onSubmit(event: Event) {
     event.preventDefault()

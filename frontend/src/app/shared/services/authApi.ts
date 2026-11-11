@@ -1,4 +1,14 @@
-import type { AuthUser, MfaChallenge } from '../types/auth'
+import type {
+  AuthUser,
+  Invitation,
+  InviteLookup,
+  InviteResult,
+  MfaChallenge,
+  RoleInfo,
+  SignupInfo,
+  TeamMember,
+  UserRole,
+} from '../types/auth'
 import { getCsrfToken } from './authStorage'
 
 const API_BASE = '/api'
@@ -67,6 +77,8 @@ interface UserResponse {
   name: string
   email_verified: boolean
   mfa_enabled?: boolean
+  role?: string
+  created_at?: string | null
 }
 
 interface SessionResponse {
@@ -89,14 +101,58 @@ function mapUser(user: UserResponse): AuthUser {
     name: user.name,
     emailVerified: user.email_verified,
     mfaEnabled: Boolean(user.mfa_enabled),
+    role: user.role === 'admin' ? 'admin' : 'operator',
   }
+}
+
+function mapMember(user: UserResponse): TeamMember {
+  return { ...mapUser(user), createdAt: user.created_at ?? null }
+}
+
+interface InvitationResponse {
+  id: string
+  email: string
+  name: string | null
+  role: string
+  status: 'pending' | 'expired' | 'accepted'
+  invited_by: string | null
+  expires_at: string | null
+  created_at: string | null
+}
+
+function mapInvitation(inv: InvitationResponse): Invitation {
+  return {
+    id: inv.id,
+    email: inv.email,
+    name: inv.name,
+    role: inv.role === 'admin' ? 'admin' : 'operator',
+    status: inv.status,
+    invitedBy: inv.invited_by,
+    expiresAt: inv.expires_at,
+    createdAt: inv.created_at,
+  }
+}
+
+interface InviteResponse {
+  ok: boolean
+  email_sent: boolean
+  invitation: InvitationResponse
+  invite_path?: string
+}
+
+function mapInviteResult(data: InviteResponse): InviteResult {
+  return { invitation: mapInvitation(data.invitation), emailSent: data.email_sent, invitePath: data.invite_path ?? null }
 }
 
 export const authApi = {
   register: async (input: { name: string; email: string; password: string }) => {
     const data = await authRequest<RegisterResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        name: input.name,
+        email: input.email,
+        password: input.password,
+      }),
     })
     return {
       email: data.email,
@@ -192,6 +248,66 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(input),
     })
+  },
+
+  listUsers: async () => {
+    const data = await authRequest<{ users: UserResponse[] }>('/auth/users', { method: 'GET' })
+    return data.users.map(mapMember)
+  },
+
+  updateUserRole: async (userId: string, role: UserRole) => {
+    const data = await authRequest<{ ok: boolean; user: UserResponse }>(`/auth/users/${encodeURIComponent(userId)}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    })
+    return mapMember(data.user)
+  },
+
+  signupInfo: async (): Promise<SignupInfo> => {
+    const data = await authRequest<{ first_account: boolean; signup_open: boolean }>('/auth/signup-info', { method: 'GET' })
+    return { firstAccount: data.first_account, signupOpen: data.signup_open }
+  },
+
+  listInvitations: async () => {
+    const data = await authRequest<{ invitations: InvitationResponse[] }>('/auth/invitations', { method: 'GET' })
+    return data.invitations.map(mapInvitation)
+  },
+
+  createInvitation: async (input: { email: string; name?: string; role: UserRole }) =>
+    mapInviteResult(
+      await authRequest<InviteResponse>('/auth/invitations', {
+        method: 'POST',
+        body: JSON.stringify({ email: input.email, name: input.name?.trim() || null, role: input.role }),
+      }),
+    ),
+
+  resendInvitation: async (id: string) =>
+    mapInviteResult(
+      await authRequest<InviteResponse>(`/auth/invitations/${encodeURIComponent(id)}/resend`, { method: 'POST' }),
+    ),
+
+  revokeInvitation: (id: string) =>
+    authRequest<{ ok: boolean }>(`/auth/invitations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  lookupInvitation: async (token: string): Promise<InviteLookup> => {
+    const data = await authRequest<{ email: string; name: string | null; role: string; invited_by: string | null }>(
+      `/auth/invitations/lookup?token=${encodeURIComponent(token)}`,
+      { method: 'GET' },
+    )
+    return { email: data.email, name: data.name, role: data.role === 'admin' ? 'admin' : 'operator', invitedBy: data.invited_by }
+  },
+
+  acceptInvitation: async (input: { token: string; name: string; password: string }) => {
+    const data = await authRequest<SessionResponse>('/auth/invitations/accept', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+    return mapUser(data.user)
+  },
+
+  listRoles: async () => {
+    const data = await authRequest<{ roles: RoleInfo[] }>('/auth/roles', { method: 'GET' })
+    return data.roles
   },
 
   me: async () => {

@@ -59,6 +59,12 @@ SEED_TEST_USER = os.getenv("GUARDIAN_SEED_TEST_USER", "0" if IS_PRODUCTION else 
 SEED_TEST_EMAIL = os.getenv("GUARDIAN_SEED_TEST_EMAIL", "operator@guardian.ai")
 SEED_TEST_PASSWORD = os.getenv("GUARDIAN_SEED_TEST_PASSWORD", "Guardian1!")
 SEED_TEST_NAME = os.getenv("GUARDIAN_SEED_TEST_NAME", "Test Operator")
+INVITE_TTL_HOURS = int(os.getenv("GUARDIAN_INVITE_TTL_HOURS", "168"))
+ADMIN_EMAILS = tuple(
+    email.strip().lower()
+    for email in os.getenv("GUARDIAN_ADMIN_EMAILS", "").split(",")
+    if email.strip()
+)
 
 
 def validate_security_config() -> None:

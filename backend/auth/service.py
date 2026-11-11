@@ -46,6 +46,7 @@ def user_public(user: User) -> UserPublic:
         name=user.name,
         email_verified=user.email_verified,
         mfa_enabled=bool(getattr(user, "mfa_enabled", False)),
+        role=getattr(user, "role", None) or "operator",
     )
 
 
@@ -85,10 +86,15 @@ def _get_pending(db: Session, email: str) -> PendingRegistration | None:
     return db.query(PendingRegistration).filter(PendingRegistration.email == email).first()
 
 
-def register_user(db: Session, *, name: str, email: str, password: str) -> tuple[str, str, str | None]:
+def register_user(
+    db: Session, *, name: str, email: str, password: str
+) -> tuple[str, str, str | None]:
+    from auth.team import check_signup_allowed
+
     normalized = normalize_email(email)
     if db.query(User).filter(User.email == normalized).first():
         raise HTTPException(status_code=400, detail="An account with this email already exists.")
+    check_signup_allowed(db)
 
     code = _generate_code()
     expires = datetime.now(timezone.utc) + timedelta(minutes=VERIFICATION_CODE_TTL_MINUTES)
@@ -136,7 +142,7 @@ def login_user(db: Session, *, email: str, password: str) -> tuple[User, str]:
             user.failed_login_attempts = 0
             user.login_locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOGIN_LOCKOUT_MINUTES)
         db.add(user)
-        db.flush()
+        db.commit()
         raise HTTPException(status_code=401, detail="Invalid email or password.")
 
     user.failed_login_attempts = 0
@@ -197,15 +203,15 @@ def _check_mfa_code(db: Session, user: User, code: str, purpose: str) -> None:
     expires = _as_utc(user.mfa_expires)
     if expires is None or expires < datetime.now(timezone.utc):
         _clear_mfa(user)
-        db.flush()
+        db.commit()
         raise HTTPException(status_code=400, detail="That code has expired. Request a new one.")
     if not hmac.compare_digest(user.mfa_code_hash, _mfa_hash(f"{user.id}:{code.strip()}")):
         user.mfa_attempts = (user.mfa_attempts or 0) + 1
         if user.mfa_attempts >= MFA_MAX_ATTEMPTS:
             _clear_mfa(user)
-            db.flush()
+            db.commit()
             raise HTTPException(status_code=429, detail="Too many wrong codes. Start again.")
-        db.flush()
+        db.commit()
         left = MFA_MAX_ATTEMPTS - user.mfa_attempts
         raise HTTPException(status_code=400, detail=f"Wrong code. {left} attempt{'s' if left != 1 else ''} left.")
     _clear_mfa(user)
@@ -277,24 +283,28 @@ def verify_email(db: Session, *, email: str, code: str) -> tuple[User, str]:
             pending.failed_verify_attempts = 0
             pending.verify_locked_until = datetime.now(timezone.utc) + timedelta(minutes=VERIFY_LOCKOUT_MINUTES)
             db.add(pending)
-            db.flush()
+            db.commit()
             raise HTTPException(
                 status_code=429,
                 detail="Too many incorrect codes. Request a new verification code.",
             )
         db.add(pending)
-        db.flush()
+        db.commit()
         raise HTTPException(status_code=400, detail="Invalid verification code.")
 
     expires = _as_utc(pending.verification_expires)
     if expires and expires < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Verification code expired. Request a new one.")
 
+    from auth.team import role_for_new_account
+
+    role = role_for_new_account(db, pending)
     user = User(
         email=pending.email,
         password_hash=pending.password_hash,
         name=pending.name,
         email_verified=True,
+        role=role,
     )
     db.add(user)
     db.delete(pending)

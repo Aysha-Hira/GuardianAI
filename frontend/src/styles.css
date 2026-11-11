@@ -9,6 +9,7 @@
 @import "./styles/subscription.css";
 @import "./styles/legal.css";
 @import "./styles/settings.css";
+@import "./styles/team.css";
 
 @theme {
   --color-guardian-bg: #080a0f;

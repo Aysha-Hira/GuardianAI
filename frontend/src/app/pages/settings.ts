@@ -66,7 +66,7 @@ function loadDisplaySettings(): DisplaySettings {
             <section class="st-section" id="account" aria-labelledby="account-h">
               <div class="st-section-head">
                 <h2 class="st-section-title" id="account-h">Account</h2>
-                <p class="st-section-desc">Your operator profile is stored in the Guardian AI database.</p>
+                <p class="st-section-desc">Your profile is stored in the Guardian AI database. Role: <span [class]="'role-chip ' + (auth.isAdmin() ? 'role-chip-admin' : 'role-chip-operator')">{{ auth.roleLabel() }}</span></p>
               </div>
               <div class="st-grid-2">
                 <div class="st-card">
@@ -199,7 +199,9 @@ function loadDisplaySettings(): DisplaySettings {
                       }
                     </div>
                     <div class="st-actions">
-                      @if (plan.planId === 'free') {
+                      @if (!auth.isAdmin()) {
+                        <span class="role-note">Plan changes are made by an administrator</span>
+                      } @else if (plan.planId === 'free') {
                         <a routerLink="/subscription" class="btn-primary">Upgrade</a>
                       } @else {
                         <a routerLink="/subscription" class="btn-ghost">Change plan</a>

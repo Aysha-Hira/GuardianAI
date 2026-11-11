@@ -14,6 +14,7 @@ interface NavItemDef {
   end?: boolean
   icon: IconName
   badge?: number
+  adminOnly?: boolean
 }
 
 interface NavGroup {
@@ -35,8 +36,8 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Intelligence',
     items: [
-      { to: '/face-recognition', label: 'Face Recognition', icon: 'face-recognition' },
-      { to: '/multicam-reid', label: 'Multi-Cam Re-ID', icon: 'multicam' },
+      { to: '/face-recognition', label: 'Face Recognition', icon: 'face-recognition', adminOnly: true },
+      { to: '/multicam-reid', label: 'Multi-Cam Re-ID', icon: 'multicam', adminOnly: true },
       { to: '/analytics', label: 'Analytics', icon: 'analytics' },
       { to: '/reports', label: 'Reports', icon: 'reports' },
     ],
@@ -45,6 +46,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'System',
     items: [
       { to: '/subscription', label: 'Subscription', icon: 'subscription' },
+      { to: '/team', label: 'Team & Roles', icon: 'users', adminOnly: true },
       { to: '/settings', label: 'Settings', icon: 'settings' },
     ],
   },
@@ -133,6 +135,7 @@ const NAV_GROUPS: NavGroup[] = [
               <div class="min-w-0">
                 <p class="sidebar-user-name">{{ user.name }}</p>
                 <p class="sidebar-user-email">{{ user.email }}</p>
+                <span [class]="'role-chip ' + (user.role === 'admin' ? 'role-chip-admin' : 'role-chip-operator')">{{ auth.roleLabel() }}</span>
               </div>
             }
           </div>
@@ -179,12 +182,13 @@ export class SidebarComponent {
 
   protected readonly navGroups = computed<NavGroup[]>(() => {
     const newIncidents = this.alerts.data()?.new_count ?? 0
+    const admin = this.auth.isAdmin()
     return NAV_GROUPS.map((group) => ({
       ...group,
-      items: group.items.map((item) =>
-        item.to === '/incidents' ? { ...item, badge: newIncidents } : item,
-      ),
-    }))
+      items: group.items
+        .filter((item) => admin || !item.adminOnly)
+        .map((item) => (item.to === '/incidents' ? { ...item, badge: newIncidents } : item)),
+    })).filter((group) => group.items.length > 0)
   })
 
   protected readonly initials = computed(

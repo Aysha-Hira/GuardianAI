@@ -255,3 +255,50 @@ def render_signin_code_email(*, code: str, ttl_minutes: int, purpose: str) -> tu
         footer_note="Guardian AI will never ask you for this code by phone or chat.",
     )
     return plain, html
+
+
+def render_invitation_email(*, accept_url: str, inviter: str, role_label: str, ttl_hours: int) -> tuple[str, str]:
+    days = max(1, round(ttl_hours / 24))
+    body_html = f"""
+    <p style="margin:0 0 18px;text-align:center;font-size:14px;line-height:1.6;">
+      <font color="{C_SUB}"><span style="color:{C_SUB};"><strong style="color:{C_LABEL};">{escape(inviter)}</strong> invited you to join the Guardian AI security team as
+      <strong style="color:{C_ACCENT};">{escape(role_label)}</strong>.</span></font>
+    </p>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="{C_CARD}" style="margin-bottom:20px;{_cell_bg(C_CARD)}">
+      <tr>
+        <td align="center" bgcolor="{C_CARD}" style="{_cell_bg(C_CARD)}">
+          <a href="{escape(accept_url)}" style="display:inline-block;padding:13px 28px;border-radius:10px;border:2px solid {C_ACCENT_BORDER};{_cell_bg(C_SURFACE)}text-decoration:none;">
+            <font color="{C_ACCENT}"><span style="font-size:14px;font-weight:700;color:{C_ACCENT};">Accept invitation</span></font>
+          </a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 14px;text-align:center;font-size:12px;line-height:1.55;">
+      <font color="{C_MUTED}"><span style="color:{C_MUTED};">Or copy this link:</span></font><br/>
+      <a href="{escape(accept_url)}" style="color:{C_INFO};word-break:break-all;">
+        <font color="{C_INFO}"><span style="color:{C_INFO};">{escape(accept_url)}</span></font>
+      </a>
+    </p>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="{C_INPUT}" style="border-radius:10px;border:2px solid {C_BORDER};{_cell_bg(C_INPUT)}">
+      <tr>
+        <td bgcolor="{C_INPUT}" style="padding:12px 14px;{_cell_bg(C_INPUT)}">
+          <p style="margin:0;font-size:12px;line-height:1.5;">
+            <font color="{C_WARNING}"><span style="color:{C_WARNING};"><strong>⏱ Valid for {days} day{'s' if days != 1 else ''}</strong></span></font>
+            <font color="{C_SUB}"><span style="color:{C_SUB};"> — you will choose your name and password when you accept.</span></font>
+          </p>
+        </td>
+      </tr>
+    </table>
+    """
+    plain = (
+        f"{inviter} invited you to join Guardian AI as {role_label}.\n\n"
+        f"Accept the invitation:\n{accept_url}\n\nValid for {days} day(s).\n"
+    )
+    html = _base_shell(
+        preheader=f"{inviter} invited you to Guardian AI",
+        hero_title="You're invited to Guardian AI",
+        hero_subtitle="Join your organisation's security operations team.",
+        body_html=body_html,
+        footer_note="If you weren't expecting this invitation, you can ignore this email.",
+    )
+    return plain, html

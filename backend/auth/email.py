@@ -14,10 +14,16 @@ from auth.config import (
     SMTP_PASSWORD,
     SMTP_PORT,
     SMTP_USER,
+    INVITE_TTL_HOURS,
     VERIFICATION_CODE_TTL_MINUTES,
     RESET_TOKEN_TTL_MINUTES,
 )
-from auth.email_templates import render_password_reset_email, render_signin_code_email, render_verification_email
+from auth.email_templates import (
+    render_invitation_email,
+    render_password_reset_email,
+    render_signin_code_email,
+    render_verification_email,
+)
 
 logger = logging.getLogger("guardian.auth.email")
 
@@ -83,3 +89,18 @@ def send_signin_code_email(to: str, code: str, *, purpose: str, ttl_minutes: int
     if AUTH_DEV_CODES or not IS_PRODUCTION:
         print(f"[Guardian Auth] Sign-in code ({purpose}) for {to}: {code}")
     return False
+
+
+def send_invitation_email(to: str, token: str, *, inviter: str, role: str) -> tuple[bool, str]:
+    accept_path = f"/accept-invite?token={token}"
+    accept_url = f"{APP_PUBLIC_URL}{accept_path}"
+    role_label = "an Administrator" if role == "admin" else "an Operator"
+    plain, html = render_invitation_email(
+        accept_url=accept_url, inviter=inviter, role_label=role_label, ttl_hours=INVITE_TTL_HOURS
+    )
+    if _send_smtp(to, "You're invited to join Guardian AI", plain, html):
+        return True, accept_path
+    logger.warning("[Guardian Auth] Invitation email not sent to %s", to)
+    if AUTH_DEV_CODES or not IS_PRODUCTION:
+        print(f"[Guardian Auth] Invitation link for {to}: {accept_url}")
+    return False, accept_path

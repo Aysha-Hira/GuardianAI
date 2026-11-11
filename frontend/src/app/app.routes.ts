@@ -4,13 +4,14 @@ import { MultiCamReIdPage } from './pages/multicam-reid'
 import { FaceRecognitionPage } from './pages/face-recognition'
 import type { Routes } from '@angular/router'
 import { AuthLayoutComponent } from './auth/auth-layout'
-import { guestGuard, protectedGuard, verifyEmailGuard } from './core/guards'
+import { adminGuard, guestGuard, protectedGuard, verifyEmailGuard } from './core/guards'
 import { AppLayoutComponent } from './layout/app-layout'
 import { ForgotPasswordPage } from './pages/auth/forgot-password'
 import { PrivacyPage, TermsPage } from './pages/auth/legal-pages'
 import { LoginPage } from './pages/auth/login'
 import { ResetPasswordPage } from './pages/auth/reset-password'
 import { SignupPage } from './pages/auth/signup'
+import { AcceptInvitePage } from './pages/auth/accept-invite'
 import { VerifyEmailPage } from './pages/auth/verify-email'
 import { CamerasPage } from './pages/cameras'
 import { CctvMapPage } from './pages/cctv-map'
@@ -21,6 +22,7 @@ import { SettingsPage } from './pages/settings'
 import { SubscriptionPage } from './pages/subscription'
 import { SubscriptionCheckoutPage } from './pages/subscription-checkout'
 import { SubscriptionConfirmationPage } from './pages/subscription-confirmation'
+import { TeamPage } from './pages/team'
 
 export const routes: Routes = [
   { path: 'terms', component: TermsPage },
@@ -36,13 +38,14 @@ export const routes: Routes = [
       { path: 'incidents', component: IncidentsPage },
       { path: 'cameras', component: CamerasPage },
       { path: 'cctv-map', component: CctvMapPage },
-      { path: 'face-recognition', component: FaceRecognitionPage },
-      { path: 'multicam-reid', component: MultiCamReIdPage },
+      { path: 'face-recognition', component: FaceRecognitionPage, canActivate: [adminGuard] },
+      { path: 'multicam-reid', component: MultiCamReIdPage, canActivate: [adminGuard] },
       { path: 'analytics', component: AnalyticsPage },
       { path: 'reports', component: ReportsPage },
       { path: 'settings', component: SettingsPage },
       { path: 'subscription', component: SubscriptionPage },
-      { path: 'subscription/checkout', component: SubscriptionCheckoutPage },
+      { path: 'subscription/checkout', component: SubscriptionCheckoutPage, canActivate: [adminGuard] },
+      { path: 'team', component: TeamPage, canActivate: [adminGuard] },
       { path: 'subscription/confirmation', component: SubscriptionConfirmationPage },
     ],
   },
@@ -56,6 +59,7 @@ export const routes: Routes = [
       { path: 'signup', component: SignupPage },
       { path: 'forgot-password', component: ForgotPasswordPage },
       { path: 'reset-password', component: ResetPasswordPage },
+      { path: 'accept-invite', component: AcceptInvitePage },
     ],
   },
 
