@@ -15,6 +15,8 @@ export class AuthService {
   readonly user = signal<AuthUser | null>(null)
   readonly pendingEmail = signal<string | null>(null)
   readonly isAuthenticated = computed(() => Boolean(this.user()?.emailVerified))
+  readonly isAdmin = computed(() => this.user()?.role === 'admin')
+  readonly roleLabel = computed(() => (this.user()?.role === 'admin' ? 'Administrator' : 'Operator'))
 
   constructor() {
     setUnauthorizedHandler(() => this.endLocalSession())
@@ -76,6 +78,13 @@ export class AuthService {
 
   async disableMfa(password: string) {
     this.user.set(await authApi.mfaDisable(password))
+  }
+
+  async acceptInvitation(input: { token: string; name: string; password: string }) {
+    const user = await authApi.acceptInvitation(input)
+    setPendingEmail(null)
+    this.pendingEmail.set(null)
+    this.user.set(user)
   }
 
   async signup(input: SignupInput) {

@@ -11,6 +11,7 @@ from auth.config import AUTH_REQUIRED
 from auth.database import SessionLocal
 from auth.security import decode_access_token
 from auth.cookies import csrf_ok, token_from_request
+from auth.rbac import is_admin, normalize_role, requires_admin
 from auth.service import get_user_by_id, token_version_matches
 
 PUBLIC_PREFIXES = (
@@ -73,9 +74,13 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     {"detail": "Session expired. Please sign in again."},
                     status_code=401,
                 )
+            role = normalize_role(getattr(user, "role", None))
+            if requires_admin(request.method, path) and not is_admin(user):
+                return JSONResponse({"detail": "Administrator access required."}, status_code=403)
         finally:
             db.close()
 
         request.state.user_id = user_id
         request.state.user_email = payload.get("email")
+        request.state.user_role = role
         return await call_next(request)

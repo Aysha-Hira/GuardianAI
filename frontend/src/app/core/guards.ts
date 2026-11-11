@@ -29,6 +29,7 @@ export const guestGuard: CanActivateFn = (_route, state) => {
     pending &&
     !path.startsWith('/verify-email') &&
     path !== '/reset-password' &&
+    path !== '/accept-invite' &&
     path !== '/login'
   ) {
     return new RedirectCommand(
@@ -47,4 +48,11 @@ export const verifyEmailGuard: CanActivateFn = (route) => {
     return new RedirectCommand(router.parseUrl('/login'), { replaceUrl: true })
   }
   return true
+}
+
+export const adminGuard: CanActivateFn = () => {
+  const auth = inject(AuthService)
+  const router = inject(Router)
+  if (auth.isAdmin()) return true
+  return new RedirectCommand(router.createUrlTree(['/'], { queryParams: { denied: 1 } }), { replaceUrl: true })
 }
