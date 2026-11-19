@@ -36,7 +36,7 @@ def _seed_account(db: Session, *, email: str, name: str, role: str) -> None:
     )
     db.flush()
     logger.info("[Guardian Auth] Seeded %s test account: %s", role, email)
-    print(f"[Guardian Auth] {role.title()} test account ready — email: {email}  password: {SEED_TEST_PASSWORD}")
+    print(f"[Guardian Auth] {role.title()} test account ready — email: {email}")
 
 
 def seed_test_user(db: Session) -> None:
