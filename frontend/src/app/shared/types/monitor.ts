@@ -90,6 +90,7 @@ export interface ExtendedStatus {
   manual_duration_sec?: number
   active_incident_clips?: number
   cameras?: { id: number; label: string; available: boolean; filename?: string }[]
+  live_stream?: boolean  
 }
 
 export type AlertFilter = 'all' | 'new' | 'high' | 'resolved'
