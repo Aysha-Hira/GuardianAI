@@ -10,7 +10,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from detection import open_webcam, scale_tracks_for_display
+from detection import open_webcam, open_rtsp_camera, scale_tracks_for_display
 from focus.incident_focus import IncidentFocusManager
 from alerts.store import AlertStore
 from behavior.anomaly_engine import BehaviorAnomalyEvent, get_behavior_engine
@@ -19,8 +19,15 @@ from recognition.track_matcher import track_identity_matcher
 from recording.recorder import RecordingManager, finalize_mp4_for_web, DEFAULT_FPS
 from cameras.multi_channel import MultiChannelManager
 from cameras.wall import CameraWall, ROAD_CAMERA_ID, WALL_SEARCHING_SLOT, WALL_VIDEO_SLOTS, WALL_WEBCAM_SLOT
+import os
+from dotenv import load_dotenv
+from urllib.parse import quote
+
 
 BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
+EZVIZ_IP = os.getenv("IP")
+EZVIZ_CODE = os.getenv("CODE")
 SNAPSHOTS_DIR = BASE_DIR / "snapshots"
 INCIDENTS_DIR = SNAPSHOTS_DIR / "incidents"
 RECORDINGS_DIR = SNAPSHOTS_DIR / "recordings"
@@ -60,7 +67,8 @@ def _format_time(seconds: float) -> str:
 def _safe_upload_name(original: str) -> str:
     ext = Path(original).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
-        raise ValueError(f"Unsupported file type '{ext or 'unknown'}'. Use MP4, AVI, or MOV.")
+        raise ValueError(
+            f"Unsupported file type '{ext or 'unknown'}'. Use MP4, AVI, or MOV.")
     token = secrets.token_hex(4)
     return f"cctv_{token}{ext}"
 
@@ -136,7 +144,9 @@ class MediaService:
 
     def _combined_focus_status(self) -> dict:
         active_id = self._active_camera_id
-        order = [active_id] + [c for c in sorted(self._incident_focus_by_channel) if c != active_id]
+        order = [active_id] + \
+            [c for c in sorted(self._incident_focus_by_channel)
+             if c != active_id]
         focuses: list[dict] = []
         for cid in order:
             mgr = self._incident_focus_by_channel.get(cid)
@@ -186,10 +196,15 @@ class MediaService:
 
         self._source_type = SOURCE_WEBCAM
         self._playback_state = PLAYBACK_PLAYING
-        self._multi.processor_for(WALL_WEBCAM_SLOT).set_active_source(SOURCE_WEBCAM)
+        self._multi.processor_for(
+            WALL_WEBCAM_SLOT).set_active_source(SOURCE_WEBCAM)
         for slot_id in WALL_VIDEO_SLOTS:
             self._multi.processor_for(slot_id).set_active_source(SOURCE_VIDEO)
         self._reset_incident_focus()
+        if EZVIZ_IP and EZVIZ_CODE:
+            url = f"rtsp://admin:{quote(EZVIZ_CODE, safe='')}@{EZVIZ_IP}:554/h264/ch1/sub/av_stream"
+            self._wall.assign_live(2, url, "EZVIZ C6")
+            print("EZVIZ camera assigned to CCTV 02.")
 
         print("Opening webcam...")
         if not self._try_open_webcam():
@@ -258,7 +273,8 @@ class MediaService:
             }
 
             if self._source_type == SOURCE_VIDEO:
-                slot = self._wall.get_slot(self._active_camera_id) if self._active_camera_id in WALL_VIDEO_SLOTS else None
+                slot = self._wall.get_slot(
+                    self._active_camera_id) if self._active_camera_id in WALL_VIDEO_SLOTS else None
                 display_name = slot.display_name if slot else None
                 video_fps = slot.fps if slot else self._video_fps
                 video_duration = slot.duration if slot else self._video_duration
@@ -272,6 +288,7 @@ class MediaService:
                         "playback_time": _format_time(self._playback_position),
                         "total_time": _format_time(video_duration),
                         "video_loop": self._video_loop,
+                        "live_stream": bool(slot and slot.live_url),
                     }
                 )
             else:
@@ -341,7 +358,8 @@ class MediaService:
     def set_zones(
         self, zones: list[dict], source: str | None = None, *, reset_states: bool = True
     ) -> dict:
-        saved = self._processor.set_zones(zones, source, reset_states=reset_states)
+        saved = self._processor.set_zones(
+            zones, source, reset_states=reset_states)
         return {
             "ok": True,
             "restricted_zones": saved,
@@ -389,7 +407,8 @@ class MediaService:
     def _build_camera_list(self) -> list[dict]:
         webcam_online = self._webcam_is_open() and self._active
         cameras = [
-            self._multi.channel_meta(WALL_WEBCAM_SLOT, webcam_online=webcam_online),
+            self._multi.channel_meta(
+                WALL_WEBCAM_SLOT, webcam_online=webcam_online),
         ]
         for slot_id in WALL_VIDEO_SLOTS:
             cameras.append(
@@ -496,7 +515,8 @@ class MediaService:
             return None
         alert = self._enrich_alert_clip_status(alert)
         with self._lock:
-            active_ids = {int(t.get("track_id", -1)) for t in self._active_tracks}
+            active_ids = {int(t.get("track_id", -1))
+                          for t in self._active_tracks}
         alert["track_active"] = int(alert.get("track_id", -1)) in active_ids
         return alert
 
@@ -601,13 +621,15 @@ class MediaService:
             cam_id = int(event.camera_id)
         except ValueError:
             cam_id = self._active_camera_id
-        camera, source_type, video_filename, video_time = self._alert_source_context(cam_id)
+        camera, source_type, video_filename, video_time = self._alert_source_context(
+            cam_id)
         channel = self._multi.get(cam_id)
         people_count = channel.people_count if channel is not None else 0
 
         snapshot_name = None
         if event.snapshot is not None:
-            snapshot_name = self._save_behavior_snapshot(cam_id, event.snapshot)
+            snapshot_name = self._save_behavior_snapshot(
+                cam_id, event.snapshot)
 
         alert = self._alert_store.create_from_behavior_anomaly(
             camera=camera,
@@ -731,7 +753,8 @@ class MediaService:
     ) -> None:
         if not zone_events:
             return
-        camera, source_type, video_filename, video_time = self._alert_source_context(channel_id)
+        camera, source_type, video_filename, video_time = self._alert_source_context(
+            channel_id)
         cam_id = channel_id if channel_id is not None else self._active_camera_id
         summaries = track_summaries or []
         for event in zone_events:
@@ -739,7 +762,8 @@ class MediaService:
                 event, evidence_files, camera_id=cam_id
             )
             track_summary = next(
-                (s for s in summaries if int(s.get("track_id", -1)) == int(event.track_id)),
+                (s for s in summaries if int(
+                    s.get("track_id", -1)) == int(event.track_id)),
                 None,
             )
             self._alert_store.create_from_security_event(
@@ -827,12 +851,14 @@ class MediaService:
                 )
                 live = True
             else:
-                focus_file = alert.get("focus_snapshot") or alert.get("full_snapshot")
+                focus_file = alert.get(
+                    "focus_snapshot") or alert.get("full_snapshot")
                 if not focus_file:
                     raise ValueError("No saved focus image for this incident")
                 path = INCIDENTS_DIR / focus_file
                 if not path.is_file():
-                    raise ValueError("Saved incident evidence is missing on disk")
+                    raise ValueError(
+                        "Saved incident evidence is missing on disk")
                 import cv2
 
                 image = cv2.imread(str(path))
@@ -864,7 +890,8 @@ class MediaService:
     ) -> dict:
         cid = int(camera_id) if camera_id is not None else self._active_camera_id
         with self._lock:
-            self._incident_focus_for(cid).lock_auto(track_id, event_type, zone_index)
+            self._incident_focus_for(cid).lock_auto(
+                track_id, event_type, zone_index)
             result = self._combined_focus_status()
             self._focus_status = result
         return {"ok": True, "camera_id": cid, **result}
@@ -977,7 +1004,8 @@ class MediaService:
         self._active_video_slot = None if camera_id == WALL_WEBCAM_SLOT else camera_id
         self._processor.set_active_source(self._source_type)
 
-        slot = self._wall.get_slot(camera_id) if camera_id in WALL_VIDEO_SLOTS else None
+        slot = self._wall.get_slot(
+            camera_id) if camera_id in WALL_VIDEO_SLOTS else None
         if slot is not None:
             self._video_fps = slot.fps
             self._video_duration = slot.duration
@@ -1040,7 +1068,8 @@ class MediaService:
             )
 
         if len(content) > MAX_UPLOAD_BYTES:
-            raise ValueError(f"File too large. Maximum size is {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.")
+            raise ValueError(
+                f"File too large. Maximum size is {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.")
         if len(content) < 1024:
             raise ValueError("File is too small to be a valid video.")
 
@@ -1063,7 +1092,8 @@ class MediaService:
         self._pending_upload_name = original_filename
 
         try:
-            result = self._wall.assign_upload(camera_id, dest, original_filename)
+            result = self._wall.assign_upload(
+                camera_id, dest, original_filename)
         except RuntimeError:
             dest.unlink(missing_ok=True)
             if camera_id == 2:
@@ -1129,7 +1159,8 @@ class MediaService:
                 self._wall.assign_upload(2, path, name or path.name)
 
         if not self._wall.slot_configured(slot_id):
-            raise RuntimeError(f"No recording loaded for CCTV 0{slot_id}. Upload a video first.")
+            raise RuntimeError(
+                f"No recording loaded for CCTV 0{slot_id}. Upload a video first.")
 
         self._video_paused = False
         self._processor.set_zones_editing(False)
@@ -1253,7 +1284,8 @@ class MediaService:
             backends.append(cv2.CAP_AVFOUNDATION)
 
         for backend in backends:
-            cap = cv2.VideoCapture(str(path)) if backend is None else cv2.VideoCapture(str(path), backend)
+            cap = cv2.VideoCapture(
+                str(path)) if backend is None else cv2.VideoCapture(str(path), backend)
             if not cap.isOpened():
                 cap.release()
                 continue
@@ -1326,7 +1358,8 @@ class MediaService:
         is_monitor = channel_id == self._active_camera_id
         fps = 1.0 / (now - prev_time) if (now - prev_time) > 0 else DEFAULT_FPS
 
-        focus_tracks = scale_tracks_for_display(result.tracks, result.display_scale)
+        focus_tracks = scale_tracks_for_display(
+            result.tracks, result.display_scale)
         focus_mgr = self._incident_focus_for(channel_id)
         focus_update = focus_mgr.update(
             result.annotated,
@@ -1383,7 +1416,8 @@ class MediaService:
                 sid: frame for sid, frame in self._focus_frames.items() if sid in active_slot_ids
             }
             self._latest_focus_frame = (
-                next(iter(self._focus_frames.values()), None) if self._focus_frames else None
+                next(iter(self._focus_frames.values()),
+                     None) if self._focus_frames else None
             )
 
         if is_monitor:
@@ -1487,7 +1521,8 @@ class MediaService:
             return prev_monitor_time
 
         prev_channel = self._channel_prev_times.get(channel_id, time.time())
-        new_prev = self._handle_channel_result(channel_id, result, prev_channel)
+        new_prev = self._handle_channel_result(
+            channel_id, result, prev_channel)
         self._channel_prev_times[channel_id] = new_prev
 
         if is_monitor:
@@ -1559,9 +1594,7 @@ class MediaService:
 
                     if channel is not None:
                         channel.video_filename = slot.display_name
-                        channel.playback_position = (
-                            slot._frame_index / slot.fps if slot.fps > 0 else 0.0
-                        )
+                        channel.playback_position = slot.playback_position()
 
                     zone_now = channel.playback_position if channel else 0.0
                     prev_monitor_time = self._process_channel_frame(

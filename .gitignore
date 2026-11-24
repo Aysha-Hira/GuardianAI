@@ -15,7 +15,7 @@ out-tsc/
 
 frontend-react-old/
 
-yolo*.pt
+
 backend/data/deepface/
 backend/data/multicam/embeddings/
 

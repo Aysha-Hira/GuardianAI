@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import os
 import threading
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import cv2
 import numpy as np
+
+os.environ.setdefault("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;tcp")
 
 WALL_WEBCAM_SLOT = 1
 WALL_VIDEO_SLOTS = (2, 3, 4)
@@ -16,6 +20,51 @@ WALL_SLOT_IDS = (1, 2, 3, 4, 5)
 
 JPEG_QUALITY = 82
 WALL_PLAYBACK_MAX_FPS = 30.0
+
+
+class _LiveReader:
+    def __init__(self, url: str) -> None:
+        self._url = url
+        self._frame: np.ndarray | None = None
+        self._seq = 0
+        self._lock = threading.Lock()
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def _open(self) -> cv2.VideoCapture:
+        cap = cv2.VideoCapture(
+            self._url,
+            cv2.CAP_FFMPEG,
+            [
+                cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, 3000,
+                cv2.CAP_PROP_READ_TIMEOUT_MSEC, 3000,
+            ],
+        )
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        return cap
+
+    def _run(self) -> None:
+        cap = self._open()
+        while not self._stop.is_set():
+            ok, frame = cap.read() if cap.isOpened() else (False, None)
+            if not ok or frame is None:
+                cap.release()
+                if self._stop.wait(2.0):
+                    break
+                cap = self._open()
+                continue
+            with self._lock:
+                self._frame = frame
+                self._seq += 1
+        cap.release()
+
+    def latest(self) -> tuple[np.ndarray | None, int]:
+        with self._lock:
+            return self._frame, self._seq
+
+    def stop(self) -> None:
+        self._stop.set()
 
 
 @dataclass
@@ -33,9 +82,20 @@ class VideoSlotState:
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
     _frame_index: int = 0
     _next_read_at: float = 0.0
+    live_url: str | None = None
+    _reader: Any = field(default=None, repr=False)
+    _last_seq: int = 0
+    _live_started_at: float = 0.0
 
     def configured(self) -> bool:
+        if self.live_url is not None:
+            return True
         return self.path is not None and self.path.exists()
+
+    def playback_position(self) -> float:
+        if self.live_url is not None:
+            return time.time() - self._live_started_at
+        return self._frame_index / self.fps if self.fps > 0 else 0.0
 
 
 class CameraWall:
@@ -56,6 +116,7 @@ class CameraWall:
 
     def _reset_slot(self, slot: VideoSlotState) -> None:
         self._release_capture(slot)
+        slot.live_url = None
         slot.path = None
         slot.display_name = None
         slot.fps = 0.0
@@ -66,6 +127,7 @@ class CameraWall:
         slot.status = "offline"
         slot._frame_index = 0
         slot._next_read_at = 0.0
+        slot._last_seq = 0
 
     def clear_slot(self, slot_id: int) -> None:
         if slot_id not in WALL_VIDEO_SLOTS:
@@ -85,16 +147,42 @@ class CameraWall:
             if not self._open_capture(slot):
                 slot.path = None
                 slot.display_name = None
-                raise RuntimeError("Could not open uploaded video for playback.")
+                raise RuntimeError(
+                    "Could not open uploaded video for playback.")
             slot.status = "playback"
         return {"camera_id": slot_id, "filename": display_name, "stored_as": path.name}
 
-    def read_frame(self, slot_id: int) -> tuple[np.ndarray | None, bool, bool]:
-        import time
+    def assign_live(self, slot_id: int, url: str, display_name: str) -> dict[str, Any]:
+        if slot_id not in WALL_VIDEO_SLOTS:
+            raise ValueError(f"Cannot assign a live stream to slot {slot_id}")
+        slot = self._slots[slot_id]
+        with slot._lock:
+            self._reset_slot(slot)
+            slot.live_url = url
+            slot.display_name = display_name
+            slot._live_started_at = time.time()
+            slot._reader = _LiveReader(url)
+            slot.status = "playback"
+        return {"camera_id": slot_id, "filename": display_name}
 
+    def read_frame(self, slot_id: int) -> tuple[np.ndarray | None, bool, bool]:
         slot = self.get_slot(slot_id)
         if slot is None or not slot.configured():
             return None, False, False
+
+        if slot.live_url is not None:
+            reader = slot._reader
+            frame, seq = reader.latest() if reader else (None, 0)
+            if frame is None:
+                return None, False, False
+            is_new = seq != slot._last_seq
+            slot._last_seq = seq
+            if is_new:
+                with slot._lock:
+                    slot.source_frame = frame.copy()
+                    slot.latest_frame = frame
+                    slot.status = "playback"
+            return frame, False, is_new
 
         now = time.time()
         native_fps = slot.fps if slot.fps > 0 else WALL_PLAYBACK_MAX_FPS
@@ -198,6 +286,9 @@ class CameraWall:
         return True
 
     def _release_capture(self, slot: VideoSlotState) -> None:
+        if slot._reader is not None:
+            slot._reader.stop()
+            slot._reader = None
         if slot._cap is not None:
             try:
                 slot._cap.release()
