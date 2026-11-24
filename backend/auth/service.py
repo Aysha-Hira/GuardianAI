@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import base64
+import io
 import secrets
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+import pyotp
+import qrcode
 
 from auth.config import (
     AUTH_DEV_CODES,
@@ -23,7 +27,7 @@ import hmac
 from auth.config import JWT_SECRET
 from auth.email import send_password_reset_email, send_signin_code_email, send_verification_email
 from auth.models import PendingRegistration, User
-from auth.schemas import UserPublic
+from auth.schemas import TotpSetupResponse, UserPublic
 from auth.security import create_access_token, hash_password, verify_password
 
 
@@ -46,6 +50,7 @@ def user_public(user: User) -> UserPublic:
         name=user.name,
         email_verified=user.email_verified,
         mfa_enabled=bool(getattr(user, "mfa_enabled", False)),
+        totp_enabled=bool(user.totp_enabled),
         role=getattr(user, "role", None) or "operator",
     )
 
@@ -123,7 +128,7 @@ def register_user(
     return normalized, pending.name, (None if sent else code)
 
 
-def login_user(db: Session, *, email: str, password: str) -> tuple[User, str]:
+def login_user(db: Session, *, email: str, password: str) -> tuple[User, None]:
     normalized = normalize_email(email)
     user = db.query(User).filter(User.email == normalized).first()
 
@@ -149,7 +154,7 @@ def login_user(db: Session, *, email: str, password: str) -> tuple[User, str]:
     user.login_locked_until = None
     db.add(user)
     db.flush()
-    return user, _issue_token(user)
+    return user, None
 
 
 MFA_CODE_TTL_MINUTES = 10
@@ -169,6 +174,158 @@ def _clear_mfa(user: User) -> None:
     user.mfa_attempts = 0
 
 
+def _clear_totp_ticket(user: User) -> None:
+    user.mfa_ticket_hash = None
+    user.mfa_purpose = None
+    user.mfa_expires = None
+    user.mfa_attempts = 0
+
+
+def _totp_setup_response(db: Session, user: User) -> TotpSetupResponse:
+    user.totp_secret = pyotp.random_base32()
+    db.flush()
+
+    otpauth_uri = pyotp.TOTP(user.totp_secret).provisioning_uri(
+        name=user.email,
+        issuer_name="Guardian AI",
+    )
+    image = qrcode.make(otpauth_uri)
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+
+    return TotpSetupResponse(
+        ok=True,
+        otpauth_uri=otpauth_uri,
+        qr_png_base64=base64.b64encode(buffer.getvalue()).decode("ascii"),
+    )
+
+
+def _start_totp_ticket(user: User, purpose: str) -> str:
+    ticket = secrets.token_urlsafe(32)
+    user.mfa_ticket_hash = _mfa_hash(ticket)
+    user.mfa_purpose = purpose
+    user.mfa_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
+    user.mfa_attempts = 0
+    return ticket
+
+
+def _totp_ticket_user(db: Session, ticket: str, purpose: str) -> User:
+    user = (
+        db.query(User)
+        .filter(
+            User.mfa_ticket_hash == _mfa_hash(ticket),
+            User.mfa_purpose == purpose,
+        )
+        .first()
+    )
+    if user is None:
+        raise HTTPException(status_code=401, detail="This sign-in has expired. Sign in again.")
+
+    expires = _as_utc(user.mfa_expires)
+    if expires is None or expires < datetime.now(timezone.utc):
+        _clear_totp_ticket(user)
+        db.commit()
+        raise HTTPException(status_code=401, detail="This sign-in has expired. Sign in again.")
+    return user
+
+
+def _record_totp_failure(db: Session, user: User) -> None:
+    user.mfa_attempts = (user.mfa_attempts or 0) + 1
+    if user.mfa_attempts >= MFA_MAX_ATTEMPTS:
+        _clear_totp_ticket(user)
+        db.commit()
+        raise HTTPException(status_code=429, detail="Too many wrong codes. Start again.")
+    db.commit()
+    raise HTTPException(status_code=401, detail="Invalid code.")
+
+
+def start_totp_enable(db: Session, user: User) -> TotpSetupResponse:
+    if user.totp_enabled:
+        raise HTTPException(status_code=400, detail="Authenticator app is already enabled.")
+    return _totp_setup_response(db, user)
+
+
+def start_totp_setup_login(db: Session, user: User) -> str:
+    if user.totp_enabled:
+        raise HTTPException(status_code=400, detail="Authenticator app is already enabled.")
+    ticket = _start_totp_ticket(user, "totp_setup")
+    db.flush()
+    return ticket
+
+
+def setup_totp_for_ticket(db: Session, ticket: str) -> TotpSetupResponse:
+    user = _totp_ticket_user(db, ticket, "totp_setup")
+    if user.totp_enabled:
+        _clear_totp_ticket(user)
+        db.commit()
+        raise HTTPException(status_code=401, detail="Authenticator setup is no longer required.")
+    return _totp_setup_response(db, user)
+
+
+def confirm_totp_enable(db: Session, user: User, code: str) -> User:
+    if not user.totp_secret or not pyotp.TOTP(user.totp_secret).verify(
+        code.strip(),
+        valid_window=1,
+    ):
+        raise HTTPException(status_code=400, detail="Invalid code.")
+
+    user.totp_enabled = True
+    db.flush()
+    return user
+
+
+def disable_totp(db: Session, user: User, password: str) -> User:
+    raise HTTPException(status_code=403, detail="Authenticator MFA is mandatory and cannot be disabled.")
+
+
+def start_totp_login(db: Session, user: User) -> tuple[str, None]:
+    if not user.totp_enabled or not user.totp_secret:
+        raise HTTPException(status_code=401, detail="Authenticator setup is required.")
+    ticket = _start_totp_ticket(user, "totp_login")
+    db.flush()
+    return ticket, None
+
+
+def finish_totp_login(
+    db: Session,
+    ticket: str,
+    code: str,
+    remember: bool,
+) -> tuple[User, str]:
+    user = _totp_ticket_user(db, ticket, "totp_login")
+
+    if not user.totp_enabled or not user.totp_secret:
+        _clear_totp_ticket(user)
+        db.commit()
+        raise HTTPException(status_code=401, detail="TOTP sign-in is not enabled.")
+
+    if not pyotp.TOTP(user.totp_secret).verify(code.strip(), valid_window=1):
+        _record_totp_failure(db, user)
+
+    _clear_totp_ticket(user)
+    db.flush()
+    return user, _issue_token(user)
+
+
+def finish_totp_setup_login(
+    db: Session,
+    ticket: str,
+    code: str,
+) -> tuple[User, str]:
+    user = _totp_ticket_user(db, ticket, "totp_setup")
+    if user.totp_enabled:
+        _clear_totp_ticket(user)
+        db.commit()
+        raise HTTPException(status_code=401, detail="Authenticator setup is no longer required.")
+    if not user.totp_secret or not pyotp.TOTP(user.totp_secret).verify(code.strip(), valid_window=1):
+        _record_totp_failure(db, user)
+
+    user.totp_enabled = True
+    _clear_totp_ticket(user)
+    db.flush()
+    return user, _issue_token(user)
+
+
 def _issue_mfa_code(db: Session, user: User, purpose: str, *, ticket: str | None = None) -> str | None:
     code = _generate_code()
     now = datetime.now(timezone.utc)
@@ -182,19 +339,6 @@ def _issue_mfa_code(db: Session, user: User, purpose: str, *, ticket: str | None
     db.flush()
     sent = send_signin_code_email(user.email, code, purpose=purpose, ttl_minutes=MFA_CODE_TTL_MINUTES)
     return None if sent else (code if AUTH_DEV_CODES else None)
-
-
-def start_mfa_login(db: Session, user: User) -> tuple[str, str | None]:
-    ticket = secrets.token_urlsafe(32)
-    dev_code = _issue_mfa_code(db, user, "login", ticket=ticket)
-    return ticket, dev_code
-
-
-def _user_for_ticket(db: Session, ticket: str) -> User:
-    user = db.query(User).filter(User.mfa_ticket_hash == _mfa_hash(ticket)).first()
-    if user is None or user.mfa_purpose != "login":
-        raise HTTPException(status_code=401, detail="This sign-in has expired. Sign in again.")
-    return user
 
 
 def _check_mfa_code(db: Session, user: User, code: str, purpose: str) -> None:
@@ -219,15 +363,11 @@ def _check_mfa_code(db: Session, user: User, code: str, purpose: str) -> None:
 
 
 def finish_mfa_login(db: Session, *, ticket: str, code: str) -> tuple[User, str]:
-    user = _user_for_ticket(db, ticket)
-    _check_mfa_code(db, user, code, "login")
-    return user, _issue_token(user)
+    raise HTTPException(status_code=403, detail="Authenticator verification is required.")
 
 
 def resend_mfa_login(db: Session, *, ticket: str) -> str | None:
-    user = _user_for_ticket(db, ticket)
-    _mfa_resend_cooldown(user)
-    return _issue_mfa_code(db, user, "login", ticket=ticket)
+    raise HTTPException(status_code=403, detail="Email MFA is not accepted for sign-in.")
 
 
 def _mfa_resend_cooldown(user: User) -> None:
@@ -264,12 +404,12 @@ def disable_mfa(db: Session, user: User, *, password: str) -> User:
     return user
 
 
-def verify_email(db: Session, *, email: str, code: str) -> tuple[User, str]:
+def verify_email(db: Session, *, email: str, code: str) -> User:
     normalized = normalize_email(email)
 
     existing = db.query(User).filter(User.email == normalized).first()
     if existing is not None:
-        return existing, _issue_token(existing)
+        raise HTTPException(status_code=400, detail="Email is already verified.")
 
     pending = _get_pending(db, normalized)
     if pending is None:
@@ -309,7 +449,7 @@ def verify_email(db: Session, *, email: str, code: str) -> tuple[User, str]:
     db.add(user)
     db.delete(pending)
     db.flush()
-    return user, _issue_token(user)
+    return user
 
 
 def resend_verification(db: Session, *, email: str) -> str | None:

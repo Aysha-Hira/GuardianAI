@@ -52,6 +52,7 @@ class UserPublic(BaseModel):
     name: str
     email_verified: bool
     mfa_enabled: bool = False
+    totp_enabled: bool = False
     role: str = "operator"
 
 
@@ -112,3 +113,19 @@ class MfaCodeRequest(BaseModel):
 
 class MfaDisableRequest(BaseModel):
     password: str = Field(min_length=1, max_length=256)
+
+
+class TotpSetupResponse(BaseModel):
+    ok: bool
+    otpauth_uri: str
+    qr_png_base64: str
+
+
+class TotpConfirmRequest(BaseModel):
+    code: str = Field(pattern=r"^\s*\d{6}\s*$")
+
+
+class TotpVerifyRequest(BaseModel):
+    ticket: str = Field(min_length=16, max_length=128)
+    code: str = Field(pattern=r"^\s*\d{6}\s*$")
+    remember: bool = True

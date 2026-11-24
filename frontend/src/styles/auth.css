@@ -415,6 +415,56 @@
   box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12);
 }
 
+.auth-totp-qr {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.auth-totp-qr img {
+  width: min(100%, 16rem);
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.auth-totp-qr figcaption {
+  max-width: 24rem;
+  color: #526071;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.auth-totp-form {
+  margin-top: 1rem;
+}
+
+.auth-totp-code {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+.auth-totp-retry {
+  margin-top: 0.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.auth-totp-retry:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .auth-resend {
   margin-top: 0.5rem;
   text-align: center;

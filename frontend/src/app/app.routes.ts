@@ -4,7 +4,7 @@ import { MultiCamReIdPage } from './pages/multicam-reid'
 import { FaceRecognitionPage } from './pages/face-recognition'
 import type { Routes } from '@angular/router'
 import { AuthLayoutComponent } from './auth/auth-layout'
-import { adminGuard, guestGuard, protectedGuard, verifyEmailGuard } from './core/guards'
+import { adminGuard, guestGuard, protectedGuard, totpChallengeGuard, verifyEmailGuard } from './core/guards'
 import { AppLayoutComponent } from './layout/app-layout'
 import { ForgotPasswordPage } from './pages/auth/forgot-password'
 import { PrivacyPage, TermsPage } from './pages/auth/legal-pages'
@@ -12,6 +12,7 @@ import { LoginPage } from './pages/auth/login'
 import { ResetPasswordPage } from './pages/auth/reset-password'
 import { SignupPage } from './pages/auth/signup'
 import { AcceptInvitePage } from './pages/auth/accept-invite'
+import { TotpChallengePage } from './pages/auth/totp-challenge'
 import { VerifyEmailPage } from './pages/auth/verify-email'
 import { CamerasPage } from './pages/cameras'
 import { CctvMapPage } from './pages/cctv-map'
@@ -56,6 +57,7 @@ export const routes: Routes = [
     canActivate: [guestGuard],
     children: [
       { path: 'login', component: LoginPage },
+      { path: 'authenticator', component: TotpChallengePage, canActivate: [totpChallengeGuard] },
       { path: 'signup', component: SignupPage },
       { path: 'forgot-password', component: ForgotPasswordPage },
       { path: 'reset-password', component: ResetPasswordPage },
