@@ -118,65 +118,22 @@ function loadDisplaySettings(): DisplaySettings {
               <div class="st-card" style="margin-top: 1rem" id="security">
                 <div class="st-plan-top" style="gap: 0.75rem">
                   <div>
-                    <p class="st-card-title">Two-step sign-in</p>
+                    <p class="st-card-title">Authenticator MFA</p>
                     <p class="st-card-sub">
-                      @if (auth.user()?.mfaEnabled) {
-                        On. Each sign-in also needs a 6-digit code emailed to {{ auth.user()?.email }}.
-                      } @else {
-                        Off. Add an emailed 6-digit code to every sign-in, so a stolen password isn’t enough.
-                      }
+                      Microsoft Authenticator or another compatible app is mandatory for every Guardian AI account.
                     </p>
                   </div>
-                  @if (auth.user()?.mfaEnabled) {
-                    <span class="st-pill st-pill-ok">On</span>
+                  @if (auth.user()?.totpEnabled) {
+                    <span class="st-pill st-pill-ok">Enabled</span>
                   } @else {
-                    <span class="st-pill">Off</span>
+                    <span class="st-pill">Setup required</span>
                   }
                 </div>
-
-                @if (!auth.user()?.mfaEnabled) {
-                  @if (mfaStep() === 'idle') {
-                    <div class="st-actions" style="margin-top: 1rem">
-                      <button type="button" class="btn-primary" [disabled]="mfaBusy()" (click)="startMfa()">{{ mfaBusy() ? 'Sending code…' : 'Turn on' }}</button>
-                    </div>
-                  } @else {
-                    <form class="st-form" (submit)="confirmMfa($event)">
-                      <p class="text-sm text-guardian-muted">We sent a code to <strong class="text-guardian-text">{{ mfaSentTo() }}</strong>. Enter it to turn two-step sign-in on.</p>
-                      @if (mfaDevCode()) {
-                        <p class="text-xs text-amber-300">Email couldn’t be sent (dev mode). Your code: <span class="font-mono">{{ mfaDevCode() }}</span></p>
-                      }
-                      <div>
-                        <label for="mfa-code" class="field-label">6-digit code</label>
-                        <input id="mfa-code" class="input-field w-40 font-mono tracking-[0.3em]" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
-                          [value]="mfaCode()" (input)="onMfaCodeInput($event)" />
-                      </div>
-                      <div class="st-actions">
-                        <button type="submit" class="btn-primary" [disabled]="mfaBusy() || mfaCode().length !== 6">{{ mfaBusy() ? 'Checking…' : 'Confirm and turn on' }}</button>
-                        <button type="button" class="btn-ghost" [disabled]="mfaBusy()" (click)="startMfa()">Send a new code</button>
-                        <button type="button" class="btn-ghost" (click)="cancelMfa()">Cancel</button>
-                      </div>
-                    </form>
-                  }
-                } @else {
-                  @if (mfaStep() === 'disable') {
-                    <form class="st-form" (submit)="turnOffMfa($event)">
-                      <div>
-                        <label for="mfa-password" class="field-label">Current password</label>
-                        <input id="mfa-password" type="password" autocomplete="current-password" class="input-field w-full" [value]="mfaPassword()" (input)="mfaPassword.set($any($event.target).value)" required />
-                      </div>
-                      <div class="st-actions">
-                        <button type="submit" class="btn-ghost" [disabled]="mfaBusy() || !mfaPassword()">{{ mfaBusy() ? 'Turning off…' : 'Turn off two-step sign-in' }}</button>
-                        <button type="button" class="btn-ghost" (click)="cancelMfa()">Keep it on</button>
-                      </div>
-                    </form>
-                  } @else {
-                    <div class="st-actions" style="margin-top: 1rem">
-                      <button type="button" class="btn-ghost" (click)="mfaStep.set('disable')">Turn off</button>
-                    </div>
-                  }
-                }
-                @if (mfaMessage(); as msg) {
-                  <p [class]="'st-msg mt-3 ' + (mfaMessageOk() ? 'st-msg-ok' : 'st-msg-err')">{{ msg }}</p>
+                @if (!auth.user()?.totpEnabled) {
+                  <div class="st-actions" style="margin-top: 1rem">
+                    <p class="st-card-sub">Complete Authenticator setup before accessing protected pages.</p>
+                    <a class="btn-primary" routerLink="/login">Continue to sign in and setup</a>
+                  </div>
                 }
               </div>
             </section>
@@ -320,14 +277,6 @@ export class SettingsPage {
   protected readonly confirmPassword = signal('')
   protected readonly passwordMessage = signal<string | null>(null)
   protected readonly passwordSaving = signal(false)
-  protected readonly mfaStep = signal<'idle' | 'verify' | 'disable'>('idle')
-  protected readonly mfaBusy = signal(false)
-  protected readonly mfaCode = signal('')
-  protected readonly mfaPassword = signal('')
-  protected readonly mfaSentTo = signal('')
-  protected readonly mfaDevCode = signal<string | null>(null)
-  protected readonly mfaMessage = signal<string | null>(null)
-  protected readonly mfaMessageOk = signal(true)
   protected readonly subs = inject(SubscriptionService)
   protected readonly planBusy = signal(false)
   protected readonly planMessage = signal<string | null>(null)
@@ -351,7 +300,7 @@ export class SettingsPage {
     const d = this.display()
     const shown = [d.showConfidenceScores && 'scores', d.showCameraOverlay && 'overlay'].filter(Boolean)
     return [
-      { id: 'account', title: 'Account', hint: this.auth.user()?.mfaEnabled ? 'Two-step sign-in on' : 'Two-step sign-in off' },
+      { id: 'account', title: 'Account', hint: this.auth.user()?.totpEnabled ? 'Authenticator enabled' : 'Authenticator setup required' },
       { id: 'plan', title: 'Plan & billing', hint: plan ? `${plan.planName} · ${plan.cameraLimitLabel}` : 'Loading…' },
       { id: 'detection', title: 'Detection', hint: `${loiter ?? '—'}s loitering · trails ${this.trails() ? 'on' : 'off'}` },
       { id: 'display', title: 'Display', hint: shown.length ? `Showing ${shown.join(' & ')}` : 'Overlays hidden' },
@@ -388,72 +337,6 @@ export class SettingsPage {
         this.trails.set(settings.show_trails)
       })
     })
-  }
-
-  protected async startMfa() {
-    this.mfaBusy.set(true)
-    this.mfaMessage.set(null)
-    try {
-      const { sentTo, devCode } = await this.auth.startMfaSetup()
-      this.mfaSentTo.set(sentTo)
-      this.mfaDevCode.set(devCode)
-      this.mfaCode.set('')
-      this.mfaStep.set('verify')
-    } catch (err) {
-      this.mfaMessageOk.set(false)
-      this.mfaMessage.set(err instanceof Error ? err.message : 'Could not send a code.')
-    } finally {
-      this.mfaBusy.set(false)
-    }
-  }
-
-  protected async confirmMfa(event: Event) {
-    event.preventDefault()
-    this.mfaBusy.set(true)
-    this.mfaMessage.set(null)
-    try {
-      await this.auth.enableMfa(this.mfaCode())
-      this.mfaStep.set('idle')
-      this.mfaMessageOk.set(true)
-      this.mfaMessage.set('Two-step sign-in is on. You’ll get a code by email next time you sign in.')
-    } catch (err) {
-      this.mfaMessageOk.set(false)
-      this.mfaMessage.set(err instanceof Error ? err.message : 'That code did not work.')
-    } finally {
-      this.mfaBusy.set(false)
-    }
-  }
-
-  protected async turnOffMfa(event: Event) {
-    event.preventDefault()
-    this.mfaBusy.set(true)
-    this.mfaMessage.set(null)
-    try {
-      await this.auth.disableMfa(this.mfaPassword())
-      this.mfaPassword.set('')
-      this.mfaStep.set('idle')
-      this.mfaMessageOk.set(true)
-      this.mfaMessage.set('Two-step sign-in is off.')
-    } catch (err) {
-      this.mfaMessageOk.set(false)
-      this.mfaMessage.set(err instanceof Error ? err.message : 'Could not turn it off.')
-    } finally {
-      this.mfaBusy.set(false)
-    }
-  }
-
-  protected onMfaCodeInput(event: Event) {
-    const el = event.target as HTMLInputElement
-    el.value = el.value.replace(/\D/g, '').slice(0, 6)
-    this.mfaCode.set(el.value)
-  }
-
-  protected cancelMfa() {
-    this.mfaStep.set('idle')
-    this.mfaCode.set('')
-    this.mfaPassword.set('')
-    this.mfaDevCode.set(null)
-    this.mfaMessage.set(null)
   }
 
   protected jump(event: Event, id: string) {

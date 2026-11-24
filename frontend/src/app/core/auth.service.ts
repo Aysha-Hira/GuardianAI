@@ -8,13 +8,14 @@ import {
   purgeLegacyTokens,
   setPendingEmail,
 } from '../shared/services/authStorage'
-import type { AuthUser, LoginInput, MfaChallenge, SignupInput } from '../shared/types/auth'
+import type { AuthUser, LoginInput, SignupInput, TotpChallenge } from '../shared/types/auth'
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly user = signal<AuthUser | null>(null)
   readonly pendingEmail = signal<string | null>(null)
-  readonly isAuthenticated = computed(() => Boolean(this.user()?.emailVerified))
+  readonly pendingTotpChallenge = signal<TotpChallenge | null>(null)
+  readonly isAuthenticated = computed(() => Boolean(this.user()?.emailVerified && this.user()?.totpEnabled))
   readonly isAdmin = computed(() => this.user()?.role === 'admin')
   readonly roleLabel = computed(() => (this.user()?.role === 'admin' ? 'Administrator' : 'Operator'))
 
@@ -26,10 +27,9 @@ export class AuthService {
     purgeLegacyTokens()
     this.pendingEmail.set(getPendingEmail())
     try {
-      this.user.set(await authApi.me())
+      await this.loadAuthenticatedUser()
     } catch {
-      clearSession()
-      this.user.set(null)
+      this.endLocalSession()
     }
   }
 
@@ -37,6 +37,23 @@ export class AuthService {
     clearSession()
     this.user.set(null)
     this.pendingEmail.set(null)
+    this.pendingTotpChallenge.set(null)
+  }
+
+  private setTotpChallenge(challenge: TotpChallenge) {
+    clearSession()
+    this.user.set(null)
+    this.pendingEmail.set(null)
+    this.pendingTotpChallenge.set(challenge)
+  }
+
+  private async loadAuthenticatedUser(): Promise<AuthUser> {
+    const user = await authApi.me()
+    if (!user.emailVerified || !user.totpEnabled) {
+      throw new Error('Authenticator setup must be completed before accessing Guardian AI.')
+    }
+    this.user.set(user)
+    return user
   }
 
   logout() {
@@ -44,47 +61,77 @@ export class AuthService {
     this.endLocalSession()
   }
 
-  async login(input: LoginInput): Promise<MfaChallenge | null> {
+  async login(input: LoginInput): Promise<TotpChallenge | null> {
     const result = await authApi.login({
       email: input.email,
       password: input.password,
       remember: input.remember !== false,
     })
-    if (result.mfa) return result.mfa
+    if (result.challenge) {
+      this.setTotpChallenge(result.challenge)
+      return result.challenge
+    }
+    this.pendingTotpChallenge.set(null)
     setPendingEmail(null)
     this.pendingEmail.set(null)
-    this.user.set(result.user)
+    try {
+      await this.loadAuthenticatedUser()
+    } catch (error) {
+      this.endLocalSession()
+      throw error
+    }
     return null
   }
 
-  async completeMfaLogin(challenge: MfaChallenge, code: string) {
-    const { user } = await authApi.loginMfa({ ticket: challenge.ticket, code, remember: challenge.remember })
-    setPendingEmail(null)
-    this.pendingEmail.set(null)
-    this.user.set(user)
+  loadTotpSetup() {
+    const challenge = this.pendingTotpChallenge()
+    if (!challenge || challenge.method !== 'totp_setup') {
+      throw new Error('There is no Authenticator setup challenge to continue.')
+    }
+    return authApi.setupTotpLogin(challenge.ticket)
   }
 
-  resendMfaLogin(challenge: MfaChallenge) {
-    return authApi.resendLoginMfa(challenge.ticket)
+  async completeTotpChallenge(code: string): Promise<AuthUser> {
+    const challenge = this.pendingTotpChallenge()
+    if (!challenge) throw new Error('The Authenticator challenge is no longer available. Sign in again.')
+
+    let verifiedUser: AuthUser
+    if (challenge.method === 'totp_setup') {
+      verifiedUser = await authApi.enableTotpLogin({
+        ticket: challenge.ticket,
+        code,
+        remember: challenge.remember,
+      })
+    } else {
+      const result = await authApi.loginTotp({
+        ticket: challenge.ticket,
+        code,
+        remember: challenge.remember,
+      })
+      verifiedUser = result.user
+    }
+
+    this.pendingTotpChallenge.set(null)
+    if (!verifiedUser.totpEnabled) {
+      this.endLocalSession()
+      throw new Error('Authenticator verification did not establish an enabled account. Sign in again.')
+    }
+
+    try {
+      return await this.loadAuthenticatedUser()
+    } catch {
+      this.endLocalSession()
+      throw new Error('Authenticator was verified, but the session could not be confirmed. Sign in again.')
+    }
   }
 
-  startMfaSetup() {
-    return authApi.mfaSetup()
-  }
-
-  async enableMfa(code: string) {
-    this.user.set(await authApi.mfaEnable(code))
-  }
-
-  async disableMfa(password: string) {
-    this.user.set(await authApi.mfaDisable(password))
+  clearTotpChallenge() {
+    this.pendingTotpChallenge.set(null)
   }
 
   async acceptInvitation(input: { token: string; name: string; password: string }) {
-    const user = await authApi.acceptInvitation(input)
-    setPendingEmail(null)
-    this.pendingEmail.set(null)
-    this.user.set(user)
+    const { challenge } = await authApi.acceptInvitation(input)
+    this.setTotpChallenge(challenge)
   }
 
   async signup(input: SignupInput) {
@@ -95,10 +142,8 @@ export class AuthService {
   }
 
   async verifyEmail(email: string, code: string) {
-    const { user } = await authApi.verifyEmail({ email, code })
-    setPendingEmail(null)
-    this.pendingEmail.set(null)
-    this.user.set(user)
+    const { challenge } = await authApi.verifyEmail({ email, code })
+    this.setTotpChallenge(challenge)
   }
 
   async resendVerification(email: string) {

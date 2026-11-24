@@ -46,7 +46,7 @@ export interface AuthUser {
   email: string
   name: string
   emailVerified: boolean
-  mfaEnabled: boolean
+  totpEnabled: boolean
   role: UserRole
 }
 
@@ -59,9 +59,8 @@ export interface RoleInfo {
   permissions: string[]
 }
 
-export interface MfaChallenge {
+export interface TotpChallenge {
   ticket: string
-  sentTo: string
-  devCode: string | null
+  method: 'totp' | 'totp_setup'
   remember: boolean
 }

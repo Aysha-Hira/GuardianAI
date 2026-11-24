@@ -116,7 +116,10 @@ export class VerifyEmailPage {
     this.loading.set(true)
     try {
       await this.auth.verifyEmail(this.email, value)
-      await this.router.navigate(['/'], { replaceUrl: true })
+      await this.router.navigateByUrl('/authenticator', {
+        replaceUrl: true,
+        state: { from: '/' },
+      })
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : 'Verification failed.')
       this.digits.set(Array(CODE_LENGTH).fill(''))

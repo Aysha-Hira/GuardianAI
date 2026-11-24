@@ -3,10 +3,10 @@ import type {
   Invitation,
   InviteLookup,
   InviteResult,
-  MfaChallenge,
   RoleInfo,
   SignupInfo,
   TeamMember,
+  TotpChallenge,
   UserRole,
 } from '../types/auth'
 import { getCsrfToken } from './authStorage'
@@ -76,7 +76,7 @@ interface UserResponse {
   email: string
   name: string
   email_verified: boolean
-  mfa_enabled?: boolean
+  totp_enabled: boolean
   role?: string
   created_at?: string | null
 }
@@ -84,6 +84,19 @@ interface UserResponse {
 interface SessionResponse {
   ok: boolean
   user: UserResponse
+}
+
+interface TotpChallengeResponse {
+  ok: boolean
+  mfa_required: true
+  method: string
+  ticket: string
+}
+
+interface TotpSetupResponse {
+  ok: boolean
+  otpauth_uri: string
+  qr_png_base64: string
 }
 
 interface RegisterResponse {
@@ -100,9 +113,16 @@ function mapUser(user: UserResponse): AuthUser {
     email: user.email,
     name: user.name,
     emailVerified: user.email_verified,
-    mfaEnabled: Boolean(user.mfa_enabled),
+    totpEnabled: user.totp_enabled,
     role: user.role === 'admin' ? 'admin' : 'operator',
   }
+}
+
+function mapTotpChallenge(data: TotpChallengeResponse, remember: boolean): TotpChallenge {
+  if (data.method !== 'totp' && data.method !== 'totp_setup') {
+    throw new AuthApiError('The server returned an unsupported sign-in challenge.', 502)
+  }
+  return { ticket: data.ticket, method: data.method, remember }
 }
 
 function mapMember(user: UserResponse): TeamMember {
@@ -163,58 +183,47 @@ export const authApi = {
 
   login: async (
     input: { email: string; password: string; remember?: boolean },
-  ): Promise<{ user: AuthUser; mfa?: undefined } | { user?: undefined; mfa: MfaChallenge }> => {
-    const data = await authRequest<
-      SessionResponse | { ok: boolean; mfa_required: true; ticket: string; sent_to: string; dev_code?: string }
-    >('/auth/login', {
+  ): Promise<{ user: AuthUser; challenge?: undefined } | { user?: undefined; challenge: TotpChallenge }> => {
+    const data = await authRequest<SessionResponse | TotpChallengeResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(input),
     })
     if ('mfa_required' in data && data.mfa_required) {
-      return {
-        mfa: { ticket: data.ticket, sentTo: data.sent_to, devCode: data.dev_code ?? null, remember: input.remember !== false },
-      }
+      return { challenge: mapTotpChallenge(data, input.remember !== false) }
     }
     return { user: mapUser((data as SessionResponse).user) }
   },
 
-  loginMfa: async (input: { ticket: string; code: string; remember: boolean }) => {
-    const data = await authRequest<SessionResponse>('/auth/login/mfa', {
+  loginTotp: async (input: { ticket: string; code: string; remember: boolean }) => {
+    const data = await authRequest<SessionResponse>('/auth/login/totp', {
       method: 'POST',
       body: JSON.stringify(input),
     })
     return { user: mapUser(data.user) }
   },
 
-  resendLoginMfa: async (ticket: string) => {
-    const data = await authRequest<{ ok: boolean; dev_code?: string }>('/auth/login/mfa/resend', {
+  setupTotpLogin: async (ticket: string) => {
+    const data = await authRequest<TotpSetupResponse>('/auth/login/totp/setup', {
       method: 'POST',
       body: JSON.stringify({ ticket }),
     })
-    return { devCode: data.dev_code ?? null }
+    return { qrPngBase64: data.qr_png_base64 }
   },
 
-  mfaSetup: async () => {
-    const data = await authRequest<{ ok: boolean; sent_to: string; dev_code?: string }>('/auth/mfa/setup', { method: 'POST' })
-    return { sentTo: data.sent_to, devCode: data.dev_code ?? null }
-  },
-
-  mfaEnable: async (code: string) => {
-    const data = await authRequest<SessionResponse>('/auth/mfa/enable', { method: 'POST', body: JSON.stringify({ code }) })
-    return mapUser(data.user)
-  },
-
-  mfaDisable: async (password: string) => {
-    const data = await authRequest<SessionResponse>('/auth/mfa/disable', { method: 'POST', body: JSON.stringify({ password }) })
+  enableTotpLogin: async (input: { ticket: string; code: string; remember: boolean }) => {
+    const data = await authRequest<SessionResponse>('/auth/login/totp/enable', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
     return mapUser(data.user)
   },
 
   verifyEmail: async (input: { email: string; code: string }) => {
-    const data = await authRequest<SessionResponse>('/auth/verify-email', {
+    const data = await authRequest<TotpChallengeResponse>('/auth/verify-email', {
       method: 'POST',
       body: JSON.stringify(input),
     })
-    return { user: mapUser(data.user) }
+    return { challenge: mapTotpChallenge(data, true) }
   },
 
   logout: async () => {
@@ -298,11 +307,11 @@ export const authApi = {
   },
 
   acceptInvitation: async (input: { token: string; name: string; password: string }) => {
-    const data = await authRequest<SessionResponse>('/auth/invitations/accept', {
+    const data = await authRequest<TotpChallengeResponse>('/auth/invitations/accept', {
       method: 'POST',
       body: JSON.stringify(input),
     })
-    return mapUser(data.user)
+    return { challenge: mapTotpChallenge(data, true) }
   },
 
   listRoles: async () => {

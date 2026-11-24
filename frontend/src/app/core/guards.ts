@@ -50,6 +50,17 @@ export const verifyEmailGuard: CanActivateFn = (route) => {
   return true
 }
 
+export const totpChallengeGuard: CanActivateFn = () => {
+  const auth = inject(AuthService)
+  const router = inject(Router)
+  if (auth.pendingTotpChallenge()) return true
+  const from = (history.state as { from?: string } | null)?.from ?? '/'
+  return new RedirectCommand(router.parseUrl('/login'), {
+    replaceUrl: true,
+    state: { from },
+  })
+}
+
 export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService)
   const router = inject(Router)

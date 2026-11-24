@@ -93,7 +93,7 @@ const ROLE_TITLES: Record<UserRole, string> = {
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
-                  <th>Two-step sign-in</th>
+                  <th>Authenticator MFA</th>
                   <th>Joined</th>
                   <th>Role</th>
                 </tr>
@@ -108,7 +108,7 @@ const ROLE_TITLES: Record<UserRole, string> = {
                       }
                     </td>
                     <td class="text-guardian-muted">{{ member.email }}</td>
-                    <td class="text-guardian-muted">{{ member.mfaEnabled ? 'On' : 'Off' }}</td>
+                    <td class="text-guardian-muted">{{ member.totpEnabled ? 'Enabled' : 'Setup required' }}</td>
                     <td class="text-guardian-muted">{{ joined(member.createdAt) }}</td>
                     <td>
                       <select

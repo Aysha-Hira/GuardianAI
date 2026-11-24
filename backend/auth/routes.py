@@ -51,19 +51,28 @@ from auth.schemas import (
     AcceptInviteRequest,
     UserPublic,
     VerifyEmailRequest,
+    TotpConfirmRequest,
+    TotpSetupResponse,
+    TotpVerifyRequest,
 )
 from auth.service import (
     _bump_token_version,
-    _issue_token,
     normalize_email,
     change_password,
     confirm_mfa_enable,
+    confirm_totp_enable,
     disable_mfa,
+    disable_totp,
+    finish_totp_login,
     finish_mfa_login,
     get_user_by_id,
     resend_mfa_login,
     start_mfa_enable,
-    start_mfa_login,
+    start_totp_setup_login,
+    start_totp_enable,
+    start_totp_login,
+    setup_totp_for_ticket,
+    finish_totp_setup_login,
     forgot_password,
     login_user,
     register_user,
@@ -111,13 +120,64 @@ def _mask_email(email: str) -> str:
 
 @router.post("/login", dependencies=[_limit_login])
 async def login(payload: LoginRequest, db: Session = Depends(db_session)):
-    user, token = login_user(db, email=str(payload.email), password=payload.password)
-    if user.mfa_enabled:
-        ticket, dev_code = start_mfa_login(db, user)
-        body: dict = {"ok": True, "mfa_required": True, "ticket": ticket, "sent_to": _mask_email(user.email)}
-        if dev_code:
-            body["dev_code"] = dev_code
-        return JSONResponse(body)
+    user, _ = login_user(db, email=str(payload.email), password=payload.password)
+    return _totp_challenge_response(db, user)
+
+
+def _totp_challenge_response(db: Session, user: User) -> JSONResponse:
+    if user.totp_enabled and user.totp_secret:
+        ticket, _ = start_totp_login(db, user)
+        method = "totp"
+    else:
+        if user.totp_enabled:
+            user.totp_enabled = False
+            db.flush()
+        ticket = start_totp_setup_login(db, user)
+        method = "totp_setup"
+    response = JSONResponse({"ok": True, "mfa_required": True, "method": method, "ticket": ticket})
+    clear_auth_cookies(response)
+    return response
+
+
+@router.post("/login/totp/setup", dependencies=[_limit_verify], response_model=TotpSetupResponse)
+async def login_totp_setup(payload: MfaTicketRequest, db: Session = Depends(db_session)):
+    return setup_totp_for_ticket(db, payload.ticket)
+
+
+@router.post("/login/totp/enable", dependencies=[_limit_verify])
+async def login_totp_enable(payload: TotpVerifyRequest, db: Session = Depends(db_session)):
+    user, token = finish_totp_setup_login(db, payload.ticket, payload.code)
+    return _session_response(user, token, remember=payload.remember)
+
+
+@router.post("/totp/setup", dependencies=[_limit_resend], response_model=TotpSetupResponse)
+async def totp_setup(user: User = Depends(get_current_user), db: Session = Depends(db_session)):
+    return start_totp_enable(db, user)
+
+
+@router.post("/totp/enable", dependencies=[_limit_verify])
+async def totp_enable(
+    payload: TotpConfirmRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+):
+    updated = confirm_totp_enable(db, user, payload.code)
+    return JSONResponse({"ok": True, "user": user_public(updated).model_dump()})
+
+
+@router.post("/totp/disable", dependencies=[_limit_verify])
+async def totp_disable(
+    payload: MfaDisableRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+):
+    updated = disable_totp(db, user, payload.password)
+    return JSONResponse({"ok": True, "user": user_public(updated).model_dump()})
+
+
+@router.post("/login/totp", dependencies=[_limit_verify])
+async def login_totp(payload: TotpVerifyRequest, db: Session = Depends(db_session)):
+    user, token = finish_totp_login(db, payload.ticket, payload.code, payload.remember)
     return _session_response(user, token, remember=payload.remember)
 
 
@@ -159,8 +219,8 @@ async def mfa_disable(payload: MfaDisableRequest, user: User = Depends(get_curre
 
 @router.post("/verify-email", dependencies=[_limit_verify])
 async def verify(payload: VerifyEmailRequest, db: Session = Depends(db_session)):
-    user, token = verify_email(db, email=str(payload.email), code=payload.code)
-    return _session_response(user, token, remember=True)
+    user = verify_email(db, email=str(payload.email), code=payload.code)
+    return _totp_challenge_response(db, user)
 
 
 def _session_response(user: User, token: str, *, remember: bool) -> JSONResponse:
@@ -382,4 +442,4 @@ async def accept_invitation(payload: AcceptInviteRequest, db: Session = Depends(
     )
     db.commit()
     db.refresh(user)
-    return _session_response(user, _issue_token(user), remember=True)
+    return _totp_challenge_response(db, user)
