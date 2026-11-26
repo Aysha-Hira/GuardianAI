@@ -81,6 +81,8 @@ from auth.service import (
     update_profile,
     user_public,
     verify_email,
+    send_email_login_code,
+    finish_email_login,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -88,11 +90,16 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 _limit_register = Depends(
     rate_limit_dependency("register", RATE_REGISTER_MAX, RATE_REGISTER_WINDOW)
 )
-_limit_login = Depends(rate_limit_dependency("login", RATE_LOGIN_MAX, RATE_LOGIN_WINDOW))
-_limit_verify = Depends(rate_limit_dependency("verify", RATE_VERIFY_MAX, RATE_VERIFY_WINDOW))
-_limit_resend = Depends(rate_limit_dependency("resend", RATE_RESEND_MAX, RATE_RESEND_WINDOW))
-_limit_forgot = Depends(rate_limit_dependency("forgot", RATE_FORGOT_MAX, RATE_FORGOT_WINDOW))
-_limit_reset = Depends(rate_limit_dependency("reset", RATE_FORGOT_MAX, RATE_FORGOT_WINDOW))
+_limit_login = Depends(rate_limit_dependency(
+    "login", RATE_LOGIN_MAX, RATE_LOGIN_WINDOW))
+_limit_verify = Depends(rate_limit_dependency(
+    "verify", RATE_VERIFY_MAX, RATE_VERIFY_WINDOW))
+_limit_resend = Depends(rate_limit_dependency(
+    "resend", RATE_RESEND_MAX, RATE_RESEND_WINDOW))
+_limit_forgot = Depends(rate_limit_dependency(
+    "forgot", RATE_FORGOT_MAX, RATE_FORGOT_WINDOW))
+_limit_reset = Depends(rate_limit_dependency(
+    "reset", RATE_FORGOT_MAX, RATE_FORGOT_WINDOW))
 
 
 @router.post("/register", dependencies=[_limit_register])
@@ -120,7 +127,8 @@ def _mask_email(email: str) -> str:
 
 @router.post("/login", dependencies=[_limit_login])
 async def login(payload: LoginRequest, db: Session = Depends(db_session)):
-    user, _ = login_user(db, email=str(payload.email), password=payload.password)
+    user, _ = login_user(db, email=str(payload.email),
+                         password=payload.password)
     return _totp_challenge_response(db, user)
 
 
@@ -134,9 +142,25 @@ def _totp_challenge_response(db: Session, user: User) -> JSONResponse:
             db.flush()
         ticket = start_totp_setup_login(db, user)
         method = "totp_setup"
-    response = JSONResponse({"ok": True, "mfa_required": True, "method": method, "ticket": ticket})
+    response = JSONResponse(
+        {"ok": True, "mfa_required": True, "method": method, "ticket": ticket})
     clear_auth_cookies(response)
     return response
+
+
+@router.post("/login/email/send", dependencies=[_limit_resend])
+async def login_email_send(payload: MfaTicketRequest, db: Session = Depends(db_session)):
+    email, dev_code = send_email_login_code(db, payload.ticket)
+    body: dict = {"ok": True, "sent_to": _mask_email(email)}
+    if dev_code:
+        body["dev_code"] = dev_code
+    return JSONResponse(body)
+
+
+@router.post("/login/email/verify", dependencies=[_limit_verify])
+async def login_email_verify(payload: TotpVerifyRequest, db: Session = Depends(db_session)):
+    user, token = finish_email_login(db, payload.ticket, payload.code)
+    return _session_response(user, token, remember=payload.remember)
 
 
 @router.post("/login/totp/setup", dependencies=[_limit_verify], response_model=TotpSetupResponse)
@@ -177,13 +201,15 @@ async def totp_disable(
 
 @router.post("/login/totp", dependencies=[_limit_verify])
 async def login_totp(payload: TotpVerifyRequest, db: Session = Depends(db_session)):
-    user, token = finish_totp_login(db, payload.ticket, payload.code, payload.remember)
+    user, token = finish_totp_login(
+        db, payload.ticket, payload.code, payload.remember)
     return _session_response(user, token, remember=payload.remember)
 
 
 @router.post("/login/mfa", dependencies=[_limit_verify])
 async def login_mfa(payload: MfaLoginRequest, db: Session = Depends(db_session)):
-    user, token = finish_mfa_login(db, ticket=payload.ticket, code=payload.code)
+    user, token = finish_mfa_login(
+        db, ticket=payload.ticket, code=payload.code)
     return _session_response(user, token, remember=payload.remember)
 
 
@@ -224,7 +250,8 @@ async def verify(payload: VerifyEmailRequest, db: Session = Depends(db_session))
 
 
 def _session_response(user: User, token: str, *, remember: bool) -> JSONResponse:
-    response = JSONResponse({"ok": True, "user": user_public(user).model_dump()})
+    response = JSONResponse(
+        {"ok": True, "user": user_public(user).model_dump()})
     set_auth_cookies(response, token, remember=remember)
     return response
 
@@ -293,7 +320,8 @@ async def change_pw(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ):
-    change_password(db, user, current=payload.current_password, new_password=payload.new_password)
+    change_password(db, user, current=payload.current_password,
+                    new_password=payload.new_password)
     return JSONResponse(MessageResponse(message="Password changed successfully.").model_dump())
 
 
@@ -326,11 +354,13 @@ async def update_user_role(
     if target is None:
         raise HTTPException(status_code=404, detail="User not found.")
     if target.id == admin.id:
-        raise HTTPException(status_code=400, detail="You cannot change your own role.")
+        raise HTTPException(
+            status_code=400, detail="You cannot change your own role.")
     if target.role == ROLE_ADMIN and payload.role != ROLE_ADMIN:
         admins = db.query(User).filter(User.role == ROLE_ADMIN).count()
         if admins <= 1:
-            raise HTTPException(status_code=400, detail="At least one administrator is required.")
+            raise HTTPException(
+                status_code=400, detail="At least one administrator is required.")
     target.role = payload.role
     db.commit()
     db.refresh(target)
@@ -351,7 +381,8 @@ if not IS_PRODUCTION:
     @router.get("/email-preview/reset", response_class=HTMLResponse)
     async def preview_reset_email():
         sample_url = f"{APP_PUBLIC_URL}/reset-password?token=sample-token-preview-only"
-        _, html = render_password_reset_email(reset_url=sample_url, ttl_minutes=RESET_TOKEN_TTL_MINUTES)
+        _, html = render_password_reset_email(
+            reset_url=sample_url, ttl_minutes=RESET_TOKEN_TTL_MINUTES)
         return HTMLResponse(html)
 
     @router.get("/email-preview", response_class=HTMLResponse)
@@ -379,7 +410,8 @@ async def signup_info(db: Session = Depends(db_session)):
 
 
 def _invite_response(inv, token: str, sent: bool, path: str) -> JSONResponse:
-    body: dict = {"ok": True, "email_sent": sent, "invitation": team_service.invitation_payload(inv)}
+    body: dict = {"ok": True, "email_sent": sent,
+                  "invitation": team_service.invitation_payload(inv)}
     if not sent or AUTH_DEV_CODES:
         body["invite_path"] = path
     return JSONResponse(body)
@@ -402,7 +434,8 @@ async def create_invitation(payload: InviteRequest, admin: User = Depends(requir
         db, admin=admin, email=normalize_email(str(payload.email)), name=payload.name, role=payload.role
     )
     db.commit()
-    sent, path = send_invitation_email(inv.email, token, inviter=admin.name, role=inv.role)
+    sent, path = send_invitation_email(
+        inv.email, token, inviter=admin.name, role=inv.role)
     return _invite_response(inv, token, sent, path)
 
 
@@ -413,7 +446,8 @@ async def resend_invitation(invitation_id: str, admin: User = Depends(require_ad
         raise HTTPException(status_code=404, detail="Invitation not found.")
     token = team_service.refresh_invitation(db, inv)
     db.commit()
-    sent, path = send_invitation_email(inv.email, token, inviter=admin.name, role=inv.role)
+    sent, path = send_invitation_email(
+        inv.email, token, inviter=admin.name, role=inv.role)
     return _invite_response(inv, token, sent, path)
 
 
@@ -431,14 +465,16 @@ async def revoke_invitation(invitation_id: str, admin: User = Depends(require_ad
 async def lookup_invitation(token: str, db: Session = Depends(db_session)):
     inv = team_service.find_open_invitation(db, token)
     return JSONResponse(
-        {"email": inv.email, "name": inv.name, "role": inv.role, "invited_by": inv.invited_by_name}
+        {"email": inv.email, "name": inv.name,
+            "role": inv.role, "invited_by": inv.invited_by_name}
     )
 
 
 @router.post("/invitations/accept", dependencies=[_limit_verify])
 async def accept_invitation(payload: AcceptInviteRequest, db: Session = Depends(db_session)):
     user = team_service.accept_invitation(
-        db, token=payload.token, name=payload.name, password_hash=hash_password(payload.password)
+        db, token=payload.token, name=payload.name, password_hash=hash_password(
+            payload.password)
     )
     db.commit()
     db.refresh(user)
