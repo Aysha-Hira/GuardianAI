@@ -72,11 +72,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     {"detail": "Session expired. Please sign in again."},
                     status_code=401,
                 )
-            if not user.totp_enabled or not user.totp_secret:
-                return JSONResponse(
-                    {"detail": "Authenticator setup is required. Sign in again to complete setup."},
-                    status_code=403,
-                )
             role = normalize_role(getattr(user, "role", None))
             if requires_admin(request.method, path) and not is_admin(user):
                 return JSONResponse({"detail": "Administrator access required."}, status_code=403)

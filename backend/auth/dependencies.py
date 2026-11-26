@@ -35,11 +35,6 @@ def get_current_user(request: Request, db: Session = Depends(db_session)) -> Use
         )
     if not user.email_verified:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email not verified.")
-    if not user.totp_enabled or not user.totp_secret:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Authenticator setup is required. Sign in again to complete setup.",
-        )
     return user
 
 
