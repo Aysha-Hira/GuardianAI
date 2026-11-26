@@ -126,7 +126,10 @@ export class AcceptInvitePage {
     this.loading.set(true)
     try {
       await this.auth.acceptInvitation({ token: this.token, name: this.name(), password: this.password() })
-      await this.router.navigate(['/'], { replaceUrl: true })
+      await this.router.navigateByUrl('/authenticator', {
+        replaceUrl: true,
+        state: { from: '/' },
+      })
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : 'Could not accept the invitation.')
     } finally {

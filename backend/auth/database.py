@@ -53,6 +53,8 @@ def _migrate_users_table() -> None:
         "mfa_attempts": "INTEGER NOT NULL DEFAULT 0",
         "mfa_sent_at": "TIMESTAMP WITH TIME ZONE" if not IS_SQLITE else "DATETIME",
         "role": "VARCHAR(20) NOT NULL DEFAULT 'operator'",
+        "totp_secret": "VARCHAR(64)",
+        "totp_enabled": "BOOLEAN NOT NULL DEFAULT FALSE" if not IS_SQLITE else "BOOLEAN NOT NULL DEFAULT 0",
     }
     with engine.begin() as conn:
         for column, ddl in additions.items():

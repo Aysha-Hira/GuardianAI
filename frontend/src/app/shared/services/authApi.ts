@@ -7,6 +7,7 @@ import type {
   SignupInfo,
   TeamMember,
   TotpChallenge,
+  TotpChallenge,
   UserRole,
 } from "../types/auth";
 import { getCsrfToken } from "./authStorage";
@@ -125,17 +126,11 @@ function mapUser(user: UserResponse): AuthUser {
   };
 }
 
-function mapTotpChallenge(
-  data: TotpChallengeResponse,
-  remember: boolean,
-): TotpChallenge {
-  if (data.method !== "totp" && data.method !== "totp_setup") {
-    throw new AuthApiError(
-      "The server returned an unsupported sign-in challenge.",
-      502,
-    );
+function mapTotpChallenge(data: TotpChallengeResponse, remember: boolean): TotpChallenge {
+  if (data.method !== 'totp' && data.method !== 'totp_setup') {
+    throw new AuthApiError('The server returned an unsupported sign-in challenge.', 502)
   }
-  return { ticket: data.ticket, method: data.method, remember };
+  return { ticket: data.ticket, method: data.method, remember }
 }
 
 function mapMember(user: UserResponse): TeamMember {

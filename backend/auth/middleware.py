@@ -7,7 +7,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from auth.config import AUTH_REQUIRED
 from auth.database import SessionLocal
 from auth.security import decode_access_token
 from auth.cookies import csrf_ok, token_from_request
@@ -38,9 +37,6 @@ def _is_public_path(path: str) -> bool:
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        if not AUTH_REQUIRED:
-            return await call_next(request)
-
         if request.method == "OPTIONS":
             return await call_next(request)
 
@@ -69,6 +65,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
         db = SessionLocal()
         try:
             user = get_user_by_id(db, str(user_id))
+            if user is None:
+                return JSONResponse({"detail": "User not found."}, status_code=401)
             if not token_version_matches(user, payload):
                 return JSONResponse(
                     {"detail": "Session expired. Please sign in again."},
