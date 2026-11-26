@@ -85,10 +85,10 @@ class SeverityScorer:
                 self._load_error = None
                 logger.info("Random Forest severity model loaded from %s", self._model_path)
                 return True
-            except Exception as exc:
+            except Exception:
                 self._pipeline = None
-                self._load_error = str(exc)
-                logger.warning("Failed to load severity model: %s", exc)
+                self._load_error = "Failed to load severity model"
+                logger.exception("Failed to load severity model")
                 return False
 
     @staticmethod
