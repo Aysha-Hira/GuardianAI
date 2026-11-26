@@ -7,7 +7,6 @@ import type {
   SignupInfo,
   TeamMember,
   TotpChallenge,
-  TotpChallenge,
   UserRole,
 } from "../types/auth";
 import { getCsrfToken } from "./authStorage";
