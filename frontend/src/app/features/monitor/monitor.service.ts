@@ -7,13 +7,11 @@ import type {
   ExtendedStatus,
   FocusStatusResponse,
   TrackSummary,
-  VideoSlotId,
   ZoneEvent,
   ZoneRect,
 } from '../../shared/types/monitor'
 import {
   adjacentCameraId,
-  isVideoSlot,
   LOITERING_MAX,
   LOITERING_MIN,
   MAX_ZONES,
@@ -32,7 +30,6 @@ import {
   zoneHandles,
 } from '../../shared/utils/zoneGeometry'
 
-const SOURCE_VIDEO = 'video'
 
 export interface ZoneBanner {
   title: string
@@ -73,7 +70,6 @@ export class MonitorService {
   readonly zoneBanner = signal<ZoneBanner | null>(null)
   readonly zoneEvents = signal<ZoneEvent[]>([])
   readonly viewCameraId = signal(1)
-  readonly videoSlotReady = signal<Record<VideoSlotId, boolean>>({ 2: false, 3: false, 4: false })
   readonly playbackPaused = signal(false)
   readonly zoomIndex = signal(0)
   readonly panX = signal(0)
@@ -86,21 +82,12 @@ export class MonitorService {
   readonly loiteringOk = signal(false)
   readonly showTrails = signal(false)
   private readonly liveClockValue = signal(liveClock())
-  readonly videoReplaceMode = signal(false)
-  readonly uploadLabel = signal('No recording loaded')
 
   readonly zoom = computed(() => ZOOM_LEVELS[this.zoomIndex()])
   readonly focusActive = computed(() => (this.focus()?.focuses?.length ?? 0) > 0)
-  readonly showVideoSetup = computed(() => {
-    const id = this.viewCameraId()
-    return isVideoSlot(id) && (!this.videoSlotReady()[id] || this.videoReplaceMode())
-  })
-  readonly clock = computed(() => {
-    const s = this.status()
-    return s?.source_type === SOURCE_VIDEO
-      ? `${s.playback_time || '00:00'} / ${s.total_time || '00:00'}`
-      : this.liveClockValue()
-  })
+  readonly cameras = computed(() => this.status()?.cameras ?? [])
+  readonly cameraIds = computed(() => this.cameras().map((camera) => camera.id))
+  readonly clock = computed(() => this.liveClockValue())
   readonly isRecording = computed(() => Boolean(this.status()?.manual_recording))
   readonly recordingDuration = computed(() => this.status()?.manual_duration_sec ?? 0)
 
@@ -112,7 +99,6 @@ export class MonitorService {
   private toastId = 0
   private frameInflight = false
   private readonly prevFrameUrl: { current: string | null } = { current: null }
-  private uploading = false
   private lastEventId = 0
   private zoneBannerTimer: number | null = null
   private zoneSnapshot: ZoneRect[] | null = null
@@ -139,7 +125,7 @@ export class MonitorService {
       window.setInterval(() => void this.pollZoneEvents(), 1000),
       window.setInterval(() => void this.refreshAlertsList(), 2000),
       window.setInterval(() => {
-        if (this.status()?.source_type !== SOURCE_VIDEO) this.liveClockValue.set(liveClock())
+        this.liveClockValue.set(liveClock())
       }, 1000),
     ]
     inject(DestroyRef).onDestroy(() => {
@@ -248,17 +234,12 @@ export class MonitorService {
     try {
       const data = await api.getExtendedStatus()
       this.status.set(data)
-      this.videoSlotReady.set({
-        2: Boolean(data.camera2_available),
-        3: Boolean(data.camera3_available),
-        4: Boolean(data.camera4_available),
-      })
       this.playbackPaused.set(data.playback_state === 'paused')
       if (data.loitering_threshold_seconds != null) {
         this.loiteringInput.set(String(Math.round(data.loitering_threshold_seconds)))
       }
       if (typeof data.show_trails === 'boolean') this.showTrails.set(data.show_trails)
-      if (!this.showVideoSetup() && !this.uploading) this.viewCameraId.set(data.camera_id ?? 1)
+      if (data.camera_id != null) this.viewCameraId.set(data.camera_id)
       if (data.incident_focus) this.focus.set(data.incident_focus)
     } catch {
     }
@@ -334,7 +315,7 @@ export class MonitorService {
       this.switching = true
       if (rawCamera) {
         const cameraId = Number(rawCamera)
-        if (!Number.isInteger(cameraId) || cameraId < 1 || cameraId > 3) {
+        if (!Number.isInteger(cameraId) || cameraId < 1) {
           clearParams()
           return
         }
@@ -427,7 +408,6 @@ export class MonitorService {
       if (this.zoneEditMode()) await this.cancelZoneEditInternal()
       await api.switchCamera(cameraId)
       this.viewCameraId.set(cameraId)
-      this.videoReplaceMode.set(false)
       await this.refreshStatus()
       await this.refreshFrame()
       await this.refreshFocus()
@@ -440,23 +420,14 @@ export class MonitorService {
 
   async navigateCamera(direction: 'prev' | 'next') {
     if (this.switching) return
-    const next = adjacentCameraId(this.viewCameraId(), direction)
-    if (isVideoSlot(next) && !this.videoSlotReady()[next]) {
-      this.videoReplaceMode.set(false)
-      this.viewCameraId.set(next)
-      return
-    }
+    const next = adjacentCameraId(this.viewCameraId(), direction, this.cameraIds())
+    if (next === this.viewCameraId()) return
     await this.switchTo(next)
   }
 
   async navigateToCamera(cameraId: number) {
-    if (cameraId === this.viewCameraId() && !this.showVideoSetup()) return
+    if (cameraId === this.viewCameraId()) return
     if (this.switching) return
-    if (isVideoSlot(cameraId) && !this.videoSlotReady()[cameraId]) {
-      this.videoReplaceMode.set(false)
-      this.viewCameraId.set(cameraId)
-      return
-    }
     await this.switchTo(cameraId)
   }
 
@@ -665,20 +636,6 @@ export class MonitorService {
     else void document.exitFullscreen?.()
   }
 
-  async toggleLoop() {
-    try {
-      if (this.playbackPaused()) {
-        await api.resumeVideo()
-        await this.refreshFrame()
-      } else {
-        await api.pauseVideo()
-      }
-      await this.refreshStatus()
-    } catch (err) {
-      this.flash(err instanceof Error ? err.message : 'Playback error')
-    }
-  }
-
   async followTrack(trackId: number) {
     try {
       this.focus.set(await api.followTrack(trackId))
@@ -738,57 +695,6 @@ export class MonitorService {
     } catch {
       this.showTrails.set(!enabled)
     }
-  }
-
-  async uploadFile(file: File) {
-    const current = this.viewCameraId()
-    const targetId: VideoSlotId = isVideoSlot(current) ? current : 2
-    this.uploading = true
-    this.uploadLabel.set(`${file.name} — uploading…`)
-    try {
-      await api.uploadVideo(file, targetId)
-      this.uploadLabel.set(`${file.name} — starting playback…`)
-      await api.switchCamera(targetId)
-      this.videoReplaceMode.set(false)
-      this.viewCameraId.set(targetId)
-      await this.refreshStatus()
-      await this.refreshFrame()
-      this.uploadLabel.set(file.name)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Upload failed'
-      this.uploadLabel.set(msg)
-      this.flash(msg)
-    } finally {
-      this.uploading = false
-    }
-  }
-
-  async deleteVideoSlot() {
-    const slot = this.viewCameraId()
-    if (!isVideoSlot(slot)) return
-    if (!window.confirm(`Delete CCTV 0${slot} recording?`)) return
-    try {
-      await api.deleteCamera(slot)
-      this.videoSlotReady.update((prev) => ({ ...prev, [slot]: false }))
-      this.uploadLabel.set('No recording loaded')
-      this.videoReplaceMode.set(false)
-      this.viewCameraId.set(1)
-      await api.switchCamera(1)
-      await this.refreshStatus()
-      await this.refreshFrame()
-    } catch (err) {
-      this.flash(err instanceof Error ? err.message : 'Delete failed')
-    }
-  }
-
-  closeVideoSetup() {
-    this.videoReplaceMode.set(false)
-    this.viewCameraId.set(1)
-  }
-
-  openVideoReplace() {
-    if (!isVideoSlot(this.viewCameraId())) return
-    this.videoReplaceMode.set(true)
   }
 
   async openAlert(id: string) {

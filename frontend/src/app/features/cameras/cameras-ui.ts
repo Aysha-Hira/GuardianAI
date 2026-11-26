@@ -54,7 +54,7 @@ export class CctvSearchingSignalComponent {
   host: { style: 'display: contents' },
   template: `
     @if (hasSignal() && src()) {
-      <img [src]="src()" [alt]="'CCTV 0' + cameraId() + ' feed'" class="cctv-feed-image" />
+      <img [src]="src()" [alt]="'Camera ' + cameraId() + ' feed'" class="cctv-feed-image" />
     } @else {
       <div class="cctv-no-signal"><app-cctv-searching-signal [compact]="true" /></div>
     }
@@ -95,7 +95,7 @@ export class CameraFeedComponent {
         }
       }
 
-      const staggerMs = priority ? 0 : (cameraId - 1) * 80
+      const staggerMs = priority ? 0 : (cameraId % 5) * 80
       const pollMs = isMonitor ? 80 : priority ? 60 : 120
       const startId = window.setTimeout(() => {
         void poll()
@@ -116,25 +116,17 @@ export class CameraFeedComponent {
 }
 
 export function channelIsSearching(camera: CameraChannel): boolean {
-  if (camera.type === 'searching' || camera.status === 'searching') return true
-  if (camera.type === 'webcam' && camera.status !== 'online') return true
-  if (camera.type === 'video' && !camera.available) return true
-  return false
+  return camera.status !== 'online' && camera.status !== 'playback'
 }
 
 function tileSubtitle(camera: CameraChannel): string {
-  if (camera.type === 'webcam') return 'Laptop Camera'
-  if (camera.type === 'searching') return 'Remote perimeter — no signal'
-  if (camera.id === 4) return camera.available ? (camera.filename ?? 'Access road feed') : 'Access road — upload traffic clip'
-  if (camera.available) return camera.filename ?? 'Recording loaded'
-  return 'No recording'
+  return camera.type === 'webcam' ? 'Local webcam' : 'Network camera'
 }
 
 function statusChip(camera: CameraChannel, active: boolean, aiEnabled: boolean): [string, string] {
   if (active) return ['cctv-chip-active', 'MONITOR FEED']
   if (!aiEnabled && camera.type !== 'searching') return ['cctv-chip-offline', 'AI PAUSED']
   if (camera.type === 'searching' || camera.status === 'searching') return ['cctv-chip-searching', 'NO SIGNAL']
-  if (camera.type === 'video' && !camera.available) return ['cctv-chip-searching', 'NO SIGNAL']
   if (camera.type === 'webcam' && camera.status !== 'online') return ['cctv-chip-searching', 'CONNECTING']
   if (camera.status === 'playback') return ['cctv-chip-playback', 'PLAYBACK']
   if (camera.status === 'online') return ['cctv-chip-online', 'ONLINE']
@@ -162,8 +154,8 @@ function statusChip(camera: CameraChannel, active: boolean, aiEnabled: boolean):
             }
           </span>
           <div class="min-w-0">
-            <p class="cctv-tile-id">CCTV 0{{ cam.id }}</p>
-            <p class="cctv-tile-label truncate">{{ cam.type === 'searching' ? 'Remote perimeter — North Gate' : (cam.filename ?? subtitle()) }}</p>
+            <p class="cctv-tile-id">{{ cam.label }}</p>
+            <p class="cctv-tile-label truncate">{{ subtitle() }}</p>
           </div>
         </div>
         <span [class]="'cctv-chip ' + chip()[0]">{{ chip()[1] }}</span>
@@ -181,9 +173,6 @@ function statusChip(camera: CameraChannel, active: boolean, aiEnabled: boolean):
         }
         @if (!isSearching() && aiEnabled() && (cam.people_count ?? 0) > 0) {
           <div class="cctv-stats-badge">{{ cam.people_count }} people · {{ cam.active_tracks ?? 0 }} tracks</div>
-        }
-        @if (uploading()) {
-          <div class="cctv-upload-overlay">Uploading…</div>
         }
       </div>
 
@@ -206,17 +195,8 @@ function statusChip(camera: CameraChannel, active: boolean, aiEnabled: boolean):
             <button type="button" class="cctv-btn cctv-btn-primary" [disabled]="activating()" (click)="activate.emit()">
               {{ activating() ? 'Opening…' : 'Open in Monitoring' }}
             </button>
-          } @else if (isVideoSlot() && !cam.available && canManage()) {
-            <input #fileInput type="file" accept="video/mp4,video/avi,video/quicktime,.mp4,.avi,.mov" class="hidden" (change)="onFile($event)" />
-            <button type="button" class="cctv-btn cctv-btn-primary" [disabled]="uploading()" (click)="fileInput.click()">Upload Video</button>
           } @else {
-            <span class="cctv-footer-note">{{ cam.id === 1 ? 'Waiting for webcam…' : 'No source' }}</span>
-          }
-
-          @if (isVideoSlot() && cam.available && canManage()) {
-            <input #replaceInput type="file" accept="video/mp4,video/avi,video/quicktime,.mp4,.avi,.mov" class="hidden" (change)="onFile($event)" />
-            <button type="button" class="cctv-btn" [disabled]="uploading()" (click)="replaceInput.click()">Replace</button>
-            <button type="button" class="cctv-btn cctv-btn-danger" (click)="remove.emit()">Remove</button>
+            <span class="cctv-footer-note">Waiting for signal…</span>
           }
         </div>
       </footer>
@@ -227,20 +207,14 @@ export class CctvTileComponent {
   readonly camera = input.required<CameraChannel>()
   readonly active = input(false)
   readonly activating = input(false)
-  readonly uploading = input(false)
   readonly canManage = input(true)
   readonly activate = output<void>()
-  readonly upload = output<File>()
-  readonly remove = output<void>()
   readonly settings = output<{ ai_enabled?: boolean; show_boxes?: boolean }>()
 
   protected readonly isSearching = computed(() => channelIsSearching(this.camera()))
   protected readonly isWebcam = computed(() => this.camera().type === 'webcam')
   protected readonly showFeed = computed(() => this.isWebcam() || !this.isSearching())
-  protected readonly isVideoSlot = computed(() => this.camera().type === 'video')
-  protected readonly canMonitor = computed(
-    () => (this.isWebcam() || !this.isSearching()) && (this.camera().id === 1 || this.camera().available),
-  )
+  protected readonly canMonitor = computed(() => this.isWebcam() || !this.isSearching())
   protected readonly aiEnabled = computed(() => this.camera().ai_enabled !== false)
   protected readonly showBoxes = computed(() => this.camera().show_boxes !== false)
   protected readonly subtitle = computed(() => tileSubtitle(this.camera()))
@@ -249,11 +223,4 @@ export class CctvTileComponent {
     () =>
       `cctv-tile ${this.active() ? 'cctv-tile-active' : ''} ${this.isSearching() && !this.isWebcam() ? 'cctv-tile-searching' : ''} ${this.isSearching() && this.isWebcam() ? 'cctv-tile-connecting' : ''}`,
   )
-
-  protected onFile(event: Event) {
-    const el = event.target as HTMLInputElement
-    const file = el.files?.[0]
-    if (file) this.upload.emit(file)
-    el.value = ''
-  }
 }

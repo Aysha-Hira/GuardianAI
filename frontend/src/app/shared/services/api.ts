@@ -1,7 +1,10 @@
 import type {
   Alert,
   AlertsResponse,
+  CameraCreatePayload,
+  CameraRecord,
   CamerasResponse,
+  CameraUpdatePayload,
   Settings,
   SystemStatus,
   Track,
@@ -171,23 +174,19 @@ export const api = {
   switchCamera: (cameraId: number) =>
     request<Record<string, unknown>>(`/source/camera/${cameraId}`, { method: 'POST' }),
 
-  uploadVideo: async (file: File, cameraId = 2) => {
-    const form = new FormData()
-    form.append('file', file)
-    const url = `${API_BASE}/upload/video?camera_id=${cameraId}`
-    const res = await fetch(url, { method: 'POST', body: form, headers: buildHeaders() })
-    if (!res.ok) {
-      const body = (await res.json().catch(() => ({}))) as { detail?: string }
-      throw new ApiError(body.detail ?? 'Upload failed', res.status)
-    }
-    return res.json() as Promise<Record<string, unknown>>
-  },
+  listCameraRecords: () => request<CameraRecord[]>('/camera'),
 
-  deleteCamera: (cameraId: number) =>
-    request<Record<string, unknown>>(`/cameras/${cameraId}`, { method: 'DELETE' }),
+  createCameraRecord: (payload: CameraCreatePayload) =>
+    request<CameraRecord>('/camera', { method: 'POST', body: JSON.stringify(payload) }),
 
-  deleteCamera2: () =>
-    request<Record<string, unknown>>('/cameras/2', { method: 'DELETE' }),
+  updateCameraRecord: (cameraId: number, payload: CameraUpdatePayload) =>
+    request<CameraRecord>(`/camera/${cameraId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  deleteCameraRecord: (cameraId: number) =>
+    request<void>(`/camera/${cameraId}`, { method: 'DELETE' }),
 
   setCameraSettings: (
     cameraId: number,
@@ -198,9 +197,6 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settings),
     }),
-
-  pauseVideo: () => request<Record<string, unknown>>('/source/video/pause', { method: 'POST' }),
-  resumeVideo: () => request<Record<string, unknown>>('/source/video/resume', { method: 'POST' }),
 
   takeSnapshot: async (viewport?: Blob) => {
     if (viewport) {

@@ -61,9 +61,6 @@ export interface FocusStatusResponse {
 export interface ExtendedStatus {
   source_type: string
   camera_id: number
-  camera2_available: boolean
-  camera3_available?: boolean
-  camera4_available?: boolean
   camera_active: boolean
   people_count: number
   vehicle_count?: number
@@ -95,22 +92,19 @@ export interface ExtendedStatus {
 
 export type AlertFilter = 'all' | 'new' | 'high' | 'resolved'
 
-export const MONITOR_CAMERA_ORDER = [1, 2, 3, 4] as const
-export type VideoSlotId = 2 | 3 | 4
-
-export function isVideoSlot(cameraId: number): cameraId is VideoSlotId {
-  return cameraId === 2 || cameraId === 3 || cameraId === 4
-}
-
-export function adjacentCameraId(current: number, direction: 'prev' | 'next'): number {
-  const order = MONITOR_CAMERA_ORDER
-  const idx = order.indexOf(current as (typeof order)[number])
+export function adjacentCameraId(
+  current: number,
+  direction: 'prev' | 'next',
+  order: readonly number[],
+): number {
+  if (order.length === 0) return current
+  const idx = order.indexOf(current)
   const base = idx >= 0 ? idx : 0
   const nextIdx =
     direction === 'next'
       ? (base + 1) % order.length
       : (base - 1 + order.length) % order.length
-  return order[nextIdx]
+  return order[nextIdx]!
 }
 
 export const ZOOM_LEVELS = [1.0, 1.25, 1.5, 2.0] as const

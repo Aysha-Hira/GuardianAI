@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core'
 import { RouterLink } from '@angular/router'
 import type { CameraChannel } from '../types'
-import { cameraBadgeLabel, CCTV_FEED_COUNT, feedStatusLabel, feedStatusTone } from '../utils/cameraLabels'
+import { cameraBadgeLabel, feedStatusLabel, feedStatusTone } from '../utils/cameraLabels'
 import { isSearchingChannel, normalizeWallCameras } from '../utils/wallCameras'
 import { PanelComponent } from './common'
 
@@ -58,7 +58,7 @@ export class CctvFeedStatusPanelComponent {
   protected readonly footer = computed(() => {
     const feeds = this.feeds()
     return feeds.length > 0
-      ? `${feeds.filter((f) => f.active).length} of ${CCTV_FEED_COUNT} feeds active`
+      ? `${feeds.filter((f) => f.active).length} of ${feeds.length} feeds active`
       : 'Connecting to camera service…'
   })
 }

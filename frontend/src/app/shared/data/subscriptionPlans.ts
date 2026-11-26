@@ -9,7 +9,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     tagline: 'Everyone starts here: one live camera',
     priceAed: 0,
     billingPeriod: 'month',
-    cameraLimit: '1 camera',
+    cameraLimit: '2 camera',
     features: [
       'Live monitoring wall',
       'Person detection & tracking',

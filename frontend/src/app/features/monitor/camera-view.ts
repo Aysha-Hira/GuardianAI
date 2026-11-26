@@ -9,71 +9,27 @@ import {
   signal,
   viewChild,
 } from "@angular/core";
-import {
-  isVideoSlot,
-  MONITOR_CAMERA_ORDER,
-  type VideoSlotId,
-} from "../../shared/types/monitor";
 import type { TrackSummary } from "../../shared/types/monitor";
 import { formatDuration, formatMmSs } from "../../shared/utils/monitorFormat";
 import { MonitorService } from "./monitor.service";
 import { Router } from "@angular/router";
 import { SubscriptionService } from "../../core/subscription.service";
 import { AuthService } from "../../core/auth.service";
-import { VideoUploadControlComponent } from "./side-panels";
 
 function monitorCameraLabel(
   viewCameraId: number,
-  showVideoSetup: boolean,
   cameraLabel: string | null | undefined,
 ): string {
-  if (showVideoSetup && isVideoSlot(viewCameraId))
-    return `CCTV 0${viewCameraId} — Load Recording`;
-  if (cameraLabel) return cameraLabel;
-  if (viewCameraId === 1) return "CCTV 01 — Laptop Camera";
-  return `CCTV 0${viewCameraId}`;
+  return cameraLabel || `Camera ${viewCameraId}`;
 }
 
 @Component({
   selector: "app-camera-view",
-  imports: [VideoUploadControlComponent],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: "display: contents" },
   template: `
     <section class="camera-shell">
-      @if (
-        onVideoSlot() && videoReady() && !m.showVideoSetup() && !liveStream()
-      ) {
-        <div class="cam2-admin-bar">
-          <span class="muted">
-            {{
-              m.status()?.video_filename
-                ? "CCTV 0" +
-                  m.viewCameraId() +
-                  " — " +
-                  m.status()?.video_filename
-                : "CCTV 0" + m.viewCameraId() + " — Recording"
-            }}
-          </span>
-          @if (auth.isAdmin()) {
-            <button
-              type="button"
-              class="source-btn"
-              (click)="m.openVideoReplace()"
-            >
-              Replace Video
-            </button>
-            <button
-              type="button"
-              class="source-btn danger"
-              (click)="m.deleteVideoSlot()"
-            >
-              Delete Recording
-            </button>
-          }
-        </div>
-      }
-
       <p class="panel-label">FULL CCTV VIEW</p>
 
       <div
@@ -81,22 +37,15 @@ function monitorCameraLabel(
         role="tablist"
         aria-label="CCTV channels"
       >
-        @for (id of cameraOrder; track id) {
+        @for (cam of m.cameras(); track cam.id) {
           <button
             type="button"
             role="tab"
-            [attr.aria-selected]="m.viewCameraId() === id"
-            [class]="
-              'monitor-cam-pill' +
-              (m.viewCameraId() === id ? ' active' : '') +
-              (slotReady(id) ? '' : ' empty')
-            "
-            (click)="m.navigateToCamera(id)"
+            [attr.aria-selected]="m.viewCameraId() === cam.id"
+            [class]="'monitor-cam-pill' + (m.viewCameraId() === cam.id ? ' active' : '')"
+            (click)="m.navigateToCamera(cam.id)"
           >
-            CCTV 0{{ id }}
-            @if (!slotReady(id)) {
-              <span class="monitor-cam-pill-hint">No video</span>
-            }
+            {{ cam.label }}
           </button>
         }
       </div>
@@ -164,40 +113,6 @@ function monitorCameraLabel(
           ></canvas>
         }
 
-        @if (m.showVideoSetup() && onVideoSlot()) {
-          <div class="cam2-setup">
-            <div class="cam2-setup-inner">
-              <p class="cam2-setup-eyebrow">CCTV 0{{ m.viewCameraId() }}</p>
-              <h3 class="cam2-setup-title">
-                {{
-                  m.videoReplaceMode() ? "Replace Recording" : "Load Recording"
-                }}
-              </h3>
-              <p class="cam2-setup-desc">
-                Upload MP4, AVI, or MOV (H.264 recommended). Max 100 MB.
-              </p>
-              @if (auth.isAdmin()) {
-                <app-video-upload-control
-                  variant="panel"
-                  label="Upload Video"
-                />
-              } @else {
-                <p class="role-note">
-                  Only an administrator can load recordings.
-                </p>
-              }
-              <p class="muted cam2-upload-status">{{ m.uploadLabel() }}</p>
-              <button
-                type="button"
-                class="source-btn cam2-setup-back"
-                (click)="m.closeVideoSetup()"
-              >
-                Back to CCTV 01
-              </button>
-            </div>
-          </div>
-        }
-
         @if (m.zoneEditMode()) {
           <div class="zone-edit-bar">
             <span class="muted" style="font-size: 0.62rem"
@@ -220,7 +135,7 @@ function monitorCameraLabel(
           </div>
         }
 
-        @if (!m.showVideoSetup()) {
+        @if (m.cameras().length > 0) {
           <div
             [class]="'camera-ui-grid' + (overlayVisible() ? '' : ' is-hidden')"
           >
@@ -315,16 +230,6 @@ function monitorCameraLabel(
                           d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
                         />
                       </svg>
-                    </button>
-                  }
-                  @if (isVideo() && !liveStream()) {
-                    <button
-                      type="button"
-                      class="ctrl-btn"
-                      title="Pause/resume"
-                      (click)="m.toggleLoop()"
-                    >
-                      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                     </button>
                   }
                   @if (canRecord() || m.isRecording()) {
@@ -552,9 +457,7 @@ function monitorCameraLabel(
             <div class="cam-ui-info glass-panel info-panel">
               <p class="info-panel-title">
                 {{
-                  m.viewCameraId() === 1 || liveStream()
-                    ? "CAM 0" + m.viewCameraId() + " · LIVE"
-                    : "CAM 0" + m.viewCameraId() + " · FEED"
+                  "CAM " + m.viewCameraId() + (online() ? " · LIVE" : " · OFFLINE")
                 }}
               </p>
               <div class="info-stats">
@@ -720,7 +623,6 @@ export class CameraViewComponent {
       queryParams: { upgrade: "recording" },
     });
   }
-  protected readonly cameraOrder = MONITOR_CAMERA_ORDER;
   protected readonly overlayVisible = signal(true);
   protected readonly floor = Math.floor;
   protected readonly duration = formatDuration;
@@ -746,18 +648,9 @@ export class CameraViewComponent {
   protected readonly liveStream = computed(() =>
     Boolean(this.m.status()?.live_stream),
   );
-  protected readonly onVideoSlot = computed(() =>
-    isVideoSlot(this.m.viewCameraId()),
-  );
-  protected readonly videoReady = computed(
-    () =>
-      this.onVideoSlot() &&
-      this.m.videoSlotReady()[this.m.viewCameraId() as VideoSlotId],
-  );
   protected readonly camLabel = computed(() =>
     monitorCameraLabel(
       this.m.viewCameraId(),
-      this.m.showVideoSetup(),
       this.m.status()?.camera_label,
     ),
   );
@@ -767,7 +660,7 @@ export class CameraViewComponent {
       (this.m.status()?.restricted_zones?.length ?? 0) > 0,
   );
   protected readonly showHudDecor = computed(
-    () => !this.m.showVideoSetup() && this.overlayVisible(),
+    () => this.overlayVisible(),
   );
   protected readonly recentEvents = computed(() =>
     [...this.m.zoneEvents()].slice(-6).reverse(),
@@ -819,10 +712,6 @@ export class CameraViewComponent {
 
   protected toggleOverlay() {
     this.overlayVisible.update((v) => !v);
-  }
-
-  protected slotReady(id: number): boolean {
-    return !isVideoSlot(id) || this.m.videoSlotReady()[id];
   }
 
   protected trackStatus(t: TrackSummary): string {

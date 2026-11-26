@@ -21,4 +21,4 @@ def plan_price(plan_id: str, period: str) -> float:
 def camera_limit_label(limit: int | None) -> str:
     if limit is None:
         return "Unlimited cameras"
-    return "1 camera" if limit == 1 else f"Up to {limit} cameras"
+    return "2 camera" if limit == 1 else f"Up to {limit} cameras"

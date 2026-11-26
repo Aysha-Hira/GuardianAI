@@ -4,7 +4,7 @@ import { CctvMapCanvasComponent, MapCommandBarComponent, MapLocationPanelCompone
 import { MAP_AREAS } from '../shared/data/cctvMapLayout'
 import { api } from '../shared/services/api'
 import { ErrorStateComponent, LoadingStateComponent } from '../shared/ui/common'
-import { CCTV_FEED_COUNT, countLiveFeeds } from '../shared/utils/cameraLabels'
+import { countLiveFeeds } from '../shared/utils/cameraLabels'
 import { getActiveAlerts } from '../shared/utils/cctvMapAlerts'
 
 @Component({
@@ -17,7 +17,7 @@ import { getActiveAlerts } from '../shared/utils/cctvMapAlerts'
       <div appErrorState message="Cannot reach Guardian AI backend."></div>
     } @else {
       <div class="cctv-map-page">
-        <app-map-command-bar [liveCount]="liveCount()" [totalFeeds]="feedCount" [activeIncidents]="activeAlerts().length" />
+        <app-map-command-bar [liveCount]="liveCount()" [totalFeeds]="feedCount()" [activeIncidents]="activeAlerts().length" />
 
         <div class="cctv-map-layout">
           <app-map-location-panel
@@ -51,12 +51,12 @@ import { getActiveAlerts } from '../shared/utils/cctvMapAlerts'
 export class CctvMapPage {
   protected readonly camerasPoll = createPoll(() => api.getCameras(), 8000, POLL_KEYS.cameras)
   private readonly alertsPoll = createPoll(() => api.getAlerts(), 5000, POLL_KEYS.alerts)
-  protected readonly feedCount = CCTV_FEED_COUNT
 
   protected readonly selectedAreaId = signal<string | null>(null)
   protected readonly selectedCameraId = signal<number | null>(null)
 
   protected readonly cameras = computed(() => this.camerasPoll.data()?.cameras ?? [])
+  protected readonly feedCount = computed(() => this.cameras().length)
   protected readonly alerts = computed(() => this.alertsPoll.data()?.alerts ?? [])
   protected readonly activeAlerts = computed(() => getActiveAlerts(this.alerts()))
   protected readonly liveCount = computed(() => countLiveFeeds(this.cameras()))

@@ -73,9 +73,6 @@ export interface AlertsResponse {
 export interface SystemStatus {
   source_type: string
   camera_id: number
-  camera2_available: boolean
-  camera3_available?: boolean
-  camera4_available?: boolean
   camera_active: boolean
   people_count: number
   vehicle_count?: number
@@ -136,6 +133,26 @@ export interface CameraChannel {
 export interface CamerasResponse {
   cameras: CameraChannel[]
 }
+
+export type CameraSourceType = 'webcam' | 'rtsp' | 'http'
+
+export interface CameraRecord {
+  id: number
+  camera_name: string
+  source_type: CameraSourceType
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CameraCreatePayload {
+  camera_name: string
+  source_type: CameraSourceType
+  url?: string | null
+  is_active?: boolean
+}
+
+export type CameraUpdatePayload = Partial<CameraCreatePayload>
 
 export interface FocusStatus {
   active: boolean

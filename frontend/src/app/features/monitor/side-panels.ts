@@ -19,36 +19,6 @@ import { EvidenceLightboxComponent } from '../alerts/evidence'
 import { MonitorService } from './monitor.service'
 
 @Component({
-  selector: 'app-video-upload-control',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { style: 'display: contents' },
-  template: `
-    <input #fileInput type="file" class="cam-upload-input"
-      accept=".mp4,.avi,.mov,video/mp4,video/quicktime,video/x-msvideo,video/*"
-      (change)="onFile($any($event.target).files?.[0])" />
-    <button type="button" [class]="'cam-upload-btn cam-upload-btn--' + variant()" (click)="fileInput.click()">
-      @if (variant() === 'compact') {
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" /></svg>
-      }
-      <span>{{ label() }}</span>
-    </button>
-  `,
-})
-export class VideoUploadControlComponent {
-  readonly variant = input<'primary' | 'compact' | 'panel'>('primary')
-  readonly label = input('Upload Video')
-  private readonly m = inject(MonitorService)
-  private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput')
-
-  protected onFile(file: File | undefined) {
-    if (!file) return
-    void this.m.uploadFile(file)
-    const el = this.fileInput()?.nativeElement
-    if (el) el.value = ''
-  }
-}
-
-@Component({
   selector: 'app-focus-frame-image',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: contents' },

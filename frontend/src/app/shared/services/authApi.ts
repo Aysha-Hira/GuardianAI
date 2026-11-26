@@ -3,95 +3,115 @@ import type {
   Invitation,
   InviteLookup,
   InviteResult,
-  MfaChallenge,
   RoleInfo,
   SignupInfo,
   TeamMember,
+  TotpChallenge,
   UserRole,
-} from '../types/auth'
-import { getCsrfToken } from './authStorage'
+} from "../types/auth";
+import { getCsrfToken } from "./authStorage";
 
-const API_BASE = '/api'
+const API_BASE = "/api";
 
 export class AuthApiError extends Error {
-  status: number
+  status: number;
 
   constructor(message: string, status: number) {
-    super(message)
-    this.name = 'AuthApiError'
-    this.status = status
+    super(message);
+    this.name = "AuthApiError";
+    this.status = status;
   }
 }
 
 function parseDetail(body: unknown): string {
-  if (typeof body !== 'object' || body === null || !('detail' in body)) {
-    return 'Request failed'
+  if (typeof body !== "object" || body === null || !("detail" in body)) {
+    return "Request failed";
   }
-  const detail = (body as { detail: unknown }).detail
-  if (typeof detail === 'string') return detail
+  const detail = (body as { detail: unknown }).detail;
+  if (typeof detail === "string") return detail;
   if (Array.isArray(detail)) {
     return detail
       .map((item) => {
-        if (typeof item === 'string') return item
-        if (typeof item === 'object' && item !== null && 'msg' in item) {
-          return String((item as { msg: unknown }).msg)
+        if (typeof item === "string") return item;
+        if (typeof item === "object" && item !== null && "msg" in item) {
+          return String((item as { msg: unknown }).msg);
         }
-        return 'Validation error'
+        return "Validation error";
       })
-      .join('; ')
+      .join("; ");
   }
-  return 'Request failed'
+  return "Request failed";
 }
 
 async function authRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers)
-  const csrf = getCsrfToken()
-  if (csrf) headers.set('X-CSRF-Token', csrf)
-  if (init?.body && !(init.body instanceof FormData) && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json')
+  const headers = new Headers(init?.headers);
+  const csrf = getCsrfToken();
+  if (csrf) headers.set("X-CSRF-Token", csrf);
+  if (
+    init?.body &&
+    !(init.body instanceof FormData) &&
+    !headers.has("Content-Type")
+  ) {
+    headers.set("Content-Type", "application/json");
   }
 
-  let response: Response
+  let response: Response;
   try {
-    response = await fetch(`${API_BASE}${path}`, { ...init, headers, credentials: 'same-origin' })
+    response = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers,
+      credentials: "same-origin",
+    });
   } catch {
-    throw new AuthApiError('Unable to connect to Guardian AI services.', 0)
+    throw new AuthApiError("Unable to connect to Guardian AI services.", 0);
   }
 
   if (!response.ok) {
-    let message = response.statusText
+    let message = response.statusText;
     try {
-      message = parseDetail(await response.json())
-    } catch {
-    }
-    throw new AuthApiError(message, response.status)
+      message = parseDetail(await response.json());
+    } catch {}
+    throw new AuthApiError(message, response.status);
   }
 
-  if (response.status === 204) return undefined as T
-  return response.json() as Promise<T>
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
 }
 
 interface UserResponse {
-  id: string
-  email: string
-  name: string
-  email_verified: boolean
-  mfa_enabled?: boolean
-  role?: string
-  created_at?: string | null
+  id: string;
+  email: string;
+  name: string;
+  email_verified: boolean;
+  totp_enabled: boolean;
+  role?: string;
+  created_at?: string | null;
 }
 
 interface SessionResponse {
-  ok: boolean
-  user: UserResponse
+  ok: boolean;
+  user: UserResponse;
+}
+
+interface TotpChallengeResponse {
+  ok: boolean;
+  mfa_required: true;
+  method: string;
+  ticket: string;
+}
+
+interface TotpSetupResponse {
+  ok: boolean;
+  otpauth_uri: string;
+  qr_png_base64: string;
 }
 
 interface RegisterResponse {
-  ok: boolean
-  message: string
-  email: string
-  name: string
-  verification_code?: string | null
+  ok: boolean;
+  message: string;
+  email: string;
+  name: string;
+  verification_code?: string | null;
 }
 
 function mapUser(user: UserResponse): AuthUser {
@@ -100,24 +120,37 @@ function mapUser(user: UserResponse): AuthUser {
     email: user.email,
     name: user.name,
     emailVerified: user.email_verified,
-    mfaEnabled: Boolean(user.mfa_enabled),
-    role: user.role === 'admin' ? 'admin' : 'operator',
+    totpEnabled: user.totp_enabled,
+    role: user.role === "admin" ? "admin" : "operator",
+  };
+}
+
+function mapTotpChallenge(
+  data: TotpChallengeResponse,
+  remember: boolean,
+): TotpChallenge {
+  if (data.method !== "totp" && data.method !== "totp_setup") {
+    throw new AuthApiError(
+      "The server returned an unsupported sign-in challenge.",
+      502,
+    );
   }
+  return { ticket: data.ticket, method: data.method, remember };
 }
 
 function mapMember(user: UserResponse): TeamMember {
-  return { ...mapUser(user), createdAt: user.created_at ?? null }
+  return { ...mapUser(user), createdAt: user.created_at ?? null };
 }
 
 interface InvitationResponse {
-  id: string
-  email: string
-  name: string | null
-  role: string
-  status: 'pending' | 'expired' | 'accepted'
-  invited_by: string | null
-  expires_at: string | null
-  created_at: string | null
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  status: "pending" | "expired" | "accepted";
+  invited_by: string | null;
+  expires_at: string | null;
+  created_at: string | null;
 }
 
 function mapInvitation(inv: InvitationResponse): Invitation {
@@ -125,214 +158,306 @@ function mapInvitation(inv: InvitationResponse): Invitation {
     id: inv.id,
     email: inv.email,
     name: inv.name,
-    role: inv.role === 'admin' ? 'admin' : 'operator',
+    role: inv.role === "admin" ? "admin" : "operator",
     status: inv.status,
     invitedBy: inv.invited_by,
     expiresAt: inv.expires_at,
     createdAt: inv.created_at,
-  }
+  };
 }
 
 interface InviteResponse {
-  ok: boolean
-  email_sent: boolean
-  invitation: InvitationResponse
-  invite_path?: string
+  ok: boolean;
+  email_sent: boolean;
+  invitation: InvitationResponse;
+  invite_path?: string;
 }
 
 function mapInviteResult(data: InviteResponse): InviteResult {
-  return { invitation: mapInvitation(data.invitation), emailSent: data.email_sent, invitePath: data.invite_path ?? null }
+  return {
+    invitation: mapInvitation(data.invitation),
+    emailSent: data.email_sent,
+    invitePath: data.invite_path ?? null,
+  };
 }
 
 export const authApi = {
-  register: async (input: { name: string; email: string; password: string }) => {
-    const data = await authRequest<RegisterResponse>('/auth/register', {
-      method: 'POST',
+  register: async (input: {
+    name: string;
+    email: string;
+    password: string;
+  }) => {
+    const data = await authRequest<RegisterResponse>("/auth/register", {
+      method: "POST",
       body: JSON.stringify({
         name: input.name,
         email: input.email,
         password: input.password,
       }),
-    })
+    });
     return {
       email: data.email,
       name: data.name,
       verificationCode: data.verification_code ?? null,
+    };
+  },
+
+  login: async (input: {
+    email: string;
+    password: string;
+    remember?: boolean;
+  }): Promise<
+    | { user: AuthUser; challenge?: undefined }
+    | { user?: undefined; challenge: TotpChallenge }
+  > => {
+    const data = await authRequest<SessionResponse | TotpChallengeResponse>(
+      "/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+    );
+    if ("mfa_required" in data && data.mfa_required) {
+      return { challenge: mapTotpChallenge(data, input.remember !== false) };
     }
+    return { user: mapUser((data as SessionResponse).user) };
   },
 
-  login: async (
-    input: { email: string; password: string; remember?: boolean },
-  ): Promise<{ user: AuthUser; mfa?: undefined } | { user?: undefined; mfa: MfaChallenge }> => {
-    const data = await authRequest<
-      SessionResponse | { ok: boolean; mfa_required: true; ticket: string; sent_to: string; dev_code?: string }
-    >('/auth/login', {
-      method: 'POST',
+  loginTotp: async (input: {
+    ticket: string;
+    code: string;
+    remember: boolean;
+  }) => {
+    const data = await authRequest<SessionResponse>("/auth/login/totp", {
+      method: "POST",
       body: JSON.stringify(input),
-    })
-    if ('mfa_required' in data && data.mfa_required) {
-      return {
-        mfa: { ticket: data.ticket, sentTo: data.sent_to, devCode: data.dev_code ?? null, remember: input.remember !== false },
-      }
-    }
-    return { user: mapUser((data as SessionResponse).user) }
+    });
+    return { user: mapUser(data.user) };
   },
 
-  loginMfa: async (input: { ticket: string; code: string; remember: boolean }) => {
-    const data = await authRequest<SessionResponse>('/auth/login/mfa', {
-      method: 'POST',
+  setupTotpLogin: async (ticket: string) => {
+    const data = await authRequest<TotpSetupResponse>(
+      "/auth/login/totp/setup",
+      {
+        method: "POST",
+        body: JSON.stringify({ ticket }),
+      },
+    );
+    return { qrPngBase64: data.qr_png_base64 };
+  },
+
+  enableTotpLogin: async (input: {
+    ticket: string;
+    code: string;
+    remember: boolean;
+  }) => {
+    const data = await authRequest<SessionResponse>("/auth/login/totp/enable", {
+      method: "POST",
       body: JSON.stringify(input),
-    })
-    return { user: mapUser(data.user) }
+    });
+    return mapUser(data.user);
   },
 
-  resendLoginMfa: async (ticket: string) => {
-    const data = await authRequest<{ ok: boolean; dev_code?: string }>('/auth/login/mfa/resend', {
-      method: 'POST',
+  sendEmailLoginCode: async (ticket: string) => {
+    const data = await authRequest<{
+      ok: boolean;
+      sent_to: string;
+      dev_code?: string;
+    }>("/auth/login/email/send", {
+      method: "POST",
       body: JSON.stringify({ ticket }),
-    })
-    return { devCode: data.dev_code ?? null }
+    });
+    return { sentTo: data.sent_to, devCode: data.dev_code ?? null };
   },
 
-  mfaSetup: async () => {
-    const data = await authRequest<{ ok: boolean; sent_to: string; dev_code?: string }>('/auth/mfa/setup', { method: 'POST' })
-    return { sentTo: data.sent_to, devCode: data.dev_code ?? null }
-  },
-
-  mfaEnable: async (code: string) => {
-    const data = await authRequest<SessionResponse>('/auth/mfa/enable', { method: 'POST', body: JSON.stringify({ code }) })
-    return mapUser(data.user)
-  },
-
-  mfaDisable: async (password: string) => {
-    const data = await authRequest<SessionResponse>('/auth/mfa/disable', { method: 'POST', body: JSON.stringify({ password }) })
-    return mapUser(data.user)
+  loginEmail: async (input: {
+    ticket: string;
+    code: string;
+    remember: boolean;
+  }) => {
+    const data = await authRequest<SessionResponse>(
+      "/auth/login/email/verify",
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+    );
+    return { user: mapUser(data.user) };
   },
 
   verifyEmail: async (input: { email: string; code: string }) => {
-    const data = await authRequest<SessionResponse>('/auth/verify-email', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    })
-    return { user: mapUser(data.user) }
+    const data = await authRequest<TotpChallengeResponse>(
+      "/auth/verify-email",
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+    );
+    return { challenge: mapTotpChallenge(data, true) };
   },
 
   logout: async () => {
-    await authRequest<{ ok: boolean }>('/auth/logout', { method: 'POST' })
+    await authRequest<{ ok: boolean }>("/auth/logout", { method: "POST" });
   },
 
   resendVerification: async (email: string) => {
     const data = await authRequest<{ ok: boolean; verification_code?: string }>(
-      '/auth/resend-verification',
+      "/auth/resend-verification",
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ email }),
       },
-    )
-    return { verificationCode: data.verification_code ?? null }
+    );
+    return { verificationCode: data.verification_code ?? null };
   },
 
   forgotPassword: async (email: string) => {
     const data = await authRequest<{ ok: boolean; reset_path?: string | null }>(
-      '/auth/forgot-password',
+      "/auth/forgot-password",
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ email }),
       },
-    )
-    return { resetPath: data.reset_path ?? null }
+    );
+    return { resetPath: data.reset_path ?? null };
   },
 
   resetPassword: async (input: { token: string; password: string }) => {
-    await authRequest<{ ok: boolean; message: string }>('/auth/reset-password', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    })
+    await authRequest<{ ok: boolean; message: string }>(
+      "/auth/reset-password",
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+    );
   },
 
   listUsers: async () => {
-    const data = await authRequest<{ users: UserResponse[] }>('/auth/users', { method: 'GET' })
-    return data.users.map(mapMember)
+    const data = await authRequest<{ users: UserResponse[] }>("/auth/users", {
+      method: "GET",
+    });
+    return data.users.map(mapMember);
   },
 
   updateUserRole: async (userId: string, role: UserRole) => {
-    const data = await authRequest<{ ok: boolean; user: UserResponse }>(`/auth/users/${encodeURIComponent(userId)}/role`, {
-      method: 'PATCH',
-      body: JSON.stringify({ role }),
-    })
-    return mapMember(data.user)
+    const data = await authRequest<{ ok: boolean; user: UserResponse }>(
+      `/auth/users/${encodeURIComponent(userId)}/role`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ role }),
+      },
+    );
+    return mapMember(data.user);
   },
 
   signupInfo: async (): Promise<SignupInfo> => {
-    const data = await authRequest<{ first_account: boolean; signup_open: boolean }>('/auth/signup-info', { method: 'GET' })
-    return { firstAccount: data.first_account, signupOpen: data.signup_open }
+    const data = await authRequest<{
+      first_account: boolean;
+      signup_open: boolean;
+    }>("/auth/signup-info", { method: "GET" });
+    return { firstAccount: data.first_account, signupOpen: data.signup_open };
   },
 
   listInvitations: async () => {
-    const data = await authRequest<{ invitations: InvitationResponse[] }>('/auth/invitations', { method: 'GET' })
-    return data.invitations.map(mapInvitation)
+    const data = await authRequest<{ invitations: InvitationResponse[] }>(
+      "/auth/invitations",
+      { method: "GET" },
+    );
+    return data.invitations.map(mapInvitation);
   },
 
-  createInvitation: async (input: { email: string; name?: string; role: UserRole }) =>
+  createInvitation: async (input: {
+    email: string;
+    name?: string;
+    role: UserRole;
+  }) =>
     mapInviteResult(
-      await authRequest<InviteResponse>('/auth/invitations', {
-        method: 'POST',
-        body: JSON.stringify({ email: input.email, name: input.name?.trim() || null, role: input.role }),
+      await authRequest<InviteResponse>("/auth/invitations", {
+        method: "POST",
+        body: JSON.stringify({
+          email: input.email,
+          name: input.name?.trim() || null,
+          role: input.role,
+        }),
       }),
     ),
 
   resendInvitation: async (id: string) =>
     mapInviteResult(
-      await authRequest<InviteResponse>(`/auth/invitations/${encodeURIComponent(id)}/resend`, { method: 'POST' }),
+      await authRequest<InviteResponse>(
+        `/auth/invitations/${encodeURIComponent(id)}/resend`,
+        { method: "POST" },
+      ),
     ),
 
   revokeInvitation: (id: string) =>
-    authRequest<{ ok: boolean }>(`/auth/invitations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    authRequest<{ ok: boolean }>(
+      `/auth/invitations/${encodeURIComponent(id)}`,
+      { method: "DELETE" },
+    ),
 
   lookupInvitation: async (token: string): Promise<InviteLookup> => {
-    const data = await authRequest<{ email: string; name: string | null; role: string; invited_by: string | null }>(
-      `/auth/invitations/lookup?token=${encodeURIComponent(token)}`,
-      { method: 'GET' },
-    )
-    return { email: data.email, name: data.name, role: data.role === 'admin' ? 'admin' : 'operator', invitedBy: data.invited_by }
+    const data = await authRequest<{
+      email: string;
+      name: string | null;
+      role: string;
+      invited_by: string | null;
+    }>(`/auth/invitations/lookup?token=${encodeURIComponent(token)}`, {
+      method: "GET",
+    });
+    return {
+      email: data.email,
+      name: data.name,
+      role: data.role === "admin" ? "admin" : "operator",
+      invitedBy: data.invited_by,
+    };
   },
 
-  acceptInvitation: async (input: { token: string; name: string; password: string }) => {
-    const data = await authRequest<SessionResponse>('/auth/invitations/accept', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    })
-    return mapUser(data.user)
+  acceptInvitation: async (input: {
+    token: string;
+    name: string;
+    password: string;
+  }) => {
+    const data = await authRequest<TotpChallengeResponse>(
+      "/auth/invitations/accept",
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+    );
+    return { challenge: mapTotpChallenge(data, true) };
   },
 
   listRoles: async () => {
-    const data = await authRequest<{ roles: RoleInfo[] }>('/auth/roles', { method: 'GET' })
-    return data.roles
+    const data = await authRequest<{ roles: RoleInfo[] }>("/auth/roles", {
+      method: "GET",
+    });
+    return data.roles;
   },
 
   me: async () => {
-    const data = await authRequest<UserResponse>('/auth/me', { method: 'GET' })
-    return mapUser(data)
+    const data = await authRequest<UserResponse>("/auth/me", { method: "GET" });
+    return mapUser(data);
   },
 
   updateProfile: async (name: string) => {
-    const data = await authRequest<UserResponse>('/auth/me', {
-      method: 'PATCH',
+    const data = await authRequest<UserResponse>("/auth/me", {
+      method: "PATCH",
       body: JSON.stringify({ name }),
-    })
-    return mapUser(data)
+    });
+    return mapUser(data);
   },
 
   changePassword: async (currentPassword: string, newPassword: string) => {
     await authRequest<{ ok: boolean; message: string }>(
-      '/auth/change-password',
+      "/auth/change-password",
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({
           current_password: currentPassword,
           new_password: newPassword,
         }),
       },
-    )
+    );
   },
-}
+};

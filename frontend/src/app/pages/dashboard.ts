@@ -14,7 +14,7 @@ import {
   SeverityLegendComponent,
   StatCardComponent,
 } from '../shared/ui/common'
-import { CCTV_FEED_COUNT, countLiveFeeds } from '../shared/utils/cameraLabels'
+import { countLiveFeeds } from '../shared/utils/cameraLabels'
 import {
   countHighSeverity,
   groupAlertsByHour,
@@ -79,7 +79,7 @@ import {
           <div appStatCard label="Total Incidents" [value]="alerts().length" [loading]="alertsPoll.loading()" tone="default" icon="activity" sub="This session"></div>
           <div appStatCard label="High Severity" [value]="highSeverity()" [loading]="alertsPoll.loading()" tone="danger" icon="alert-triangle" sub="High + critical"></div>
           <div appStatCard label="Active Tracks" [value]="statusPoll.data()?.active_tracks ?? 0" [loading]="statusPoll.loading()" tone="accent" icon="users" sub="Currently detected"></div>
-          <div appStatCard label="CCTV Feeds Live" [value]="feedsLive() + ' / ' + feedCount" [loading]="statusPoll.loading() || camerasPoll.loading()" tone="info" icon="cameras" sub="Webcam + uploaded channels"></div>
+          <div appStatCard label="CCTV Feeds Live" [value]="feedsLive() + ' / ' + feedCount()" [loading]="statusPoll.loading() || camerasPoll.loading()" tone="info" icon="cameras" sub="Webcam + uploaded channels"></div>
         </div>
 
         <app-cctv-feed-status-panel [cameras]="cameras()" [loading]="camerasPoll.loading()" />
@@ -122,7 +122,7 @@ import {
               <ng-container *ngTemplateOutlet="row; context: { label: 'FPS', value: status()?.fps != null ? '' + status()?.fps : '—', mono: true }" />
               <ng-container *ngTemplateOutlet="row; context: { label: 'People Detected', value: '' + (status()?.people_count ?? 0) }" />
               <ng-container *ngTemplateOutlet="row; context: { label: 'Active Tracks', value: '' + (status()?.active_tracks ?? 0) }" />
-              <ng-container *ngTemplateOutlet="row; context: { label: 'CCTV Channels', value: feedsLive() + ' / ' + feedCount + ' live', last: true }" />
+              <ng-container *ngTemplateOutlet="row; context: { label: 'CCTV Channels', value: feedsLive() + ' / ' + feedCount() + ' live', last: true }" />
             </dl>
           </section>
 
@@ -141,10 +141,10 @@ export class DashboardPage {
   protected readonly alertsPoll = createPoll(() => api.getAlerts(), 3000, POLL_KEYS.alerts)
   protected readonly statusPoll = createPoll(() => api.getStatus(), 3000, POLL_KEYS.status)
   protected readonly camerasPoll = createPoll(() => api.getCameras(), 5000, POLL_KEYS.cameras)
-  protected readonly feedCount = CCTV_FEED_COUNT
 
   protected readonly alerts = computed(() => this.alertsPoll.data()?.alerts ?? [])
   protected readonly cameras = computed(() => this.camerasPoll.data()?.cameras ?? [])
+  protected readonly feedCount = computed(() => this.cameras().length)
   protected readonly status = this.statusPoll.data
   protected readonly newCount = computed(() => this.alertsPoll.data()?.new_count ?? 0)
   protected readonly latestAlert = computed(() => this.alerts()[0] ?? null)
