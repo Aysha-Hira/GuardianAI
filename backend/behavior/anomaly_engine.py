@@ -92,9 +92,9 @@ class BehaviorAnomalyEngine:
                 self._global_threshold,
                 WARMUP_WINDOWS,
             )
-        except Exception as exc:
-            self._load_error = str(exc)
-            logger.exception("ConvLSTM load failed: %s", exc)
+        except Exception:
+            self._load_error = "ConvLSTM model failed to load"
+            logger.exception("ConvLSTM load failed")
 
     @property
     def available(self) -> bool:

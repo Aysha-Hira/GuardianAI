@@ -59,10 +59,12 @@ class DeepFaceClient:
             detail = json.loads(proc.stdout or "{}")
         except subprocess.TimeoutExpired:
             detail = {"ok": False, "error": "DeepFace probe timed out"}
-        except json.JSONDecodeError as exc:
-            detail = {"ok": False, "error": f"Invalid probe response: {exc}"}
-        except Exception as exc:
-            detail = {"ok": False, "error": str(exc)}
+        except json.JSONDecodeError:
+            logger.exception("Invalid DeepFace probe response")
+            detail = {"ok": False, "error": "Invalid probe response"}
+        except Exception:
+            logger.exception("DeepFace probe failed")
+            detail = {"ok": False, "error": "DeepFace probe failed"}
 
         with self._lock:
             self._probe_cache = bool(detail.get("ok"))
@@ -104,10 +106,12 @@ class DeepFaceClient:
             return json.loads(proc.stdout or "{}")
         except subprocess.TimeoutExpired:
             return {"ok": False, "error": "DeepFace represent timed out"}
-        except json.JSONDecodeError as exc:
-            return {"ok": False, "error": f"Invalid represent response: {exc}"}
-        except Exception as exc:
-            return {"ok": False, "error": str(exc)}
+        except json.JSONDecodeError:
+            logger.exception("Invalid DeepFace represent response")
+            return {"ok": False, "error": "Invalid represent response"}
+        except Exception:
+            logger.exception("DeepFace represent failed")
+            return {"ok": False, "error": "DeepFace represent failed"}
 
 
 deepface_client = DeepFaceClient()
