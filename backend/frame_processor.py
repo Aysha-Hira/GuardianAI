@@ -53,7 +53,7 @@ class FrameProcessor:
         self._last_tracks: list[TrackResult] = []
         self._last_summaries: list[dict[str, Any]] = []
         self._warned_no_model = False
-
+        self._vehicle_tracker = None
     # ------------------------------------------------------------------ setup
 
     def set_model(self, model) -> None:

@@ -47,7 +47,7 @@ def yolo_inference_device() -> str:
 
 def load_model() -> YOLO:
     """Load YOLO once and move it to the best available device."""
-    return YOLO("yolo11m_crowdhuman.pt")
+    return YOLO("models/yolo11m_crowdhuman.pt")
 
 
 def preprocess_for_detection(frame: np.ndarray) -> np.ndarray:
